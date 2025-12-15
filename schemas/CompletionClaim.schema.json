@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vrwx.io/schemas/CompletionClaim.json",
+  "title": "CompletionClaim",
+  "description": "Claim submitted by robot upon job completion",
+  "type": "object",
+  "required": ["jobSpecHash", "datasetHash", "coveredGeoCell", "qualityScore", "timestampsHash"],
+  "additionalProperties": false,
+  "properties": {
+    "jobSpecHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of the original JobSpec"
+    },
+    "datasetHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of the collected dataset"
+    },
+    "coveredGeoCell": {
+      "type": "string",
+      "description": "Geographic cell actually covered by the work"
+    },
+    "qualityScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Self-reported quality score (0-100)"
+    },
+    "timestampsHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of execution timestamps"
+    }
+  }
+}

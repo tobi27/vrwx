@@ -1,0 +1,6 @@
+packages:
+  - sdk
+  - sim
+  - api
+ignoredBuiltDependencies:
+  - better-sqlite3

@@ -1,0 +1,17 @@
+{
+  "_comment": "VRWX P1.5 deployment on Base Sepolia - PLACEHOLDER",
+  "_deployed": null,
+  "_deployer": null,
+  "stableToken": null,
+  "vrwxToken": null,
+  "identity": null,
+  "bond": null,
+  "receipt": null,
+  "escrow": null,
+  "dispute": null,
+  "rewardsDistributor": null,
+  "reputationLedger": null,
+  "feeRouter": null,
+  "stakingGate": null,
+  "offerBook": null
+}

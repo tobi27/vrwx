@@ -1,0 +1,21 @@
+{
+  "serviceType": "security_patrol",
+  "jobId": 2001,
+  "robotId": "robot-patrol-001",
+  "controller": "0x2345678901234567890123456789012345678901",
+  "eventBundle": [
+    { "type": "start", "timestamp": 1702510000 },
+    { "type": "checkpoint", "id": "cp-1", "timestamp": 1702510100, "dwell": 35 },
+    { "type": "checkpoint", "id": "cp-2", "timestamp": 1702510200, "dwell": 40 },
+    { "type": "checkpoint", "id": "cp-3", "timestamp": 1702510300, "dwell": 30 },
+    { "type": "checkpoint", "id": "cp-4", "timestamp": 1702510400, "dwell": 45 },
+    { "type": "complete", "timestamp": 1702510500 }
+  ],
+  "patrol": {
+    "checkpointsVisited": ["cp-1", "cp-2", "cp-3", "cp-4"],
+    "dwellSeconds": [35, 40, 30, 45],
+    "expectedCheckpoints": ["cp-1", "cp-2", "cp-3", "cp-4", "cp-5"]
+  },
+  "startTs": 1702510000,
+  "endTs": 1702510500
+}

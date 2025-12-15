@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vrwx.io/schemas/ReceiptMetadata.json",
+  "title": "ReceiptMetadata",
+  "description": "Metadata for a VRWX WorkReceipt NFT (ERC-1155)",
+  "type": "object",
+  "required": ["jobId", "jobSpecHash", "completionHash", "tokenId", "buyer", "robotId", "settledAt"],
+  "additionalProperties": true,
+  "properties": {
+    "serviceType": {
+      "type": "string",
+      "enum": ["inspection", "security_patrol", "delivery"],
+      "description": "Type of service performed"
+    },
+    "serviceTypeHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of serviceType string"
+    },
+    "manifestHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Hash of the canonical ExecutionManifest"
+    },
+    "manifestUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to retrieve the full ExecutionManifest"
+    },
+    "computedQualityScore": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Quality score recomputed from manifest by server"
+    },
+    "computedWorkUnits": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Work units recomputed from manifest by server"
+    },
+    "jobId": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "On-chain job ID"
+    },
+    "jobSpecHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of the JobSpec"
+    },
+    "completionHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of the CompletionClaim"
+    },
+    "tokenId": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]+$",
+      "description": "ERC-1155 token ID (hex)"
+    },
+    "buyer": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{40}$",
+      "description": "Address of the job buyer"
+    },
+    "robotId": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Robot identifier"
+    },
+    "settledAt": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Unix timestamp when job was settled"
+    },
+    "price": {
+      "type": "string",
+      "description": "Job price in wei (string to handle large numbers)"
+    },
+    "payout": {
+      "type": "string",
+      "description": "Robot payout in wei (string to handle large numbers)"
+    },
+    "fee": {
+      "type": "string",
+      "description": "Protocol fee in wei (string to handle large numbers)"
+    }
+  }
+}

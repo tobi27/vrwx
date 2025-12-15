@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+api/dist/
+sdk/dist/
+packages/*/dist/
+
+# Archives (non-critical files)
+archive/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated
+*.log
+proof-lite.json
+proof-pack.json

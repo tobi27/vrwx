@@ -1,0 +1,46 @@
+{
+  "base-sepolia": {
+    "chainId": 84532,
+    "rpcUrl": "https://sepolia.base.org",
+    "explorer": "https://sepolia.basescan.org",
+    "explorerApi": "https://api-sepolia.basescan.org/api",
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18
+    }
+  },
+  "arbitrum-sepolia": {
+    "chainId": 421614,
+    "rpcUrl": "https://sepolia-rollup.arbitrum.io/rpc",
+    "explorer": "https://sepolia.arbiscan.io",
+    "explorerApi": "https://api-sepolia.arbiscan.io/api",
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18
+    }
+  },
+  "sepolia": {
+    "chainId": 11155111,
+    "rpcUrl": "https://rpc.sepolia.org",
+    "explorer": "https://sepolia.etherscan.io",
+    "explorerApi": "https://api-sepolia.etherscan.io/api",
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18
+    }
+  },
+  "localhost": {
+    "chainId": 31337,
+    "rpcUrl": "http://localhost:8545",
+    "explorer": null,
+    "explorerApi": null,
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 18
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "expectedHash": "0x...",
+  "expectedQuality": 92,
+  "expectedWorkUnits": 47,
+  "schemaVersion": "2025-12-15",
+  "manifestVersion": "2.0",
+  "_note": "Quality = (45/50)*80 + 20 = 72 + 20 = 92. WorkUnits = 45 + 2 = 47"
+}

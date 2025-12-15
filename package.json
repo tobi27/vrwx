@@ -1,0 +1,35 @@
+{
+  "name": "vrwx",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "demo": "pnpm --filter @vrwx/sim run demo",
+    "depin-demo": "pnpm --filter @vrwx/sim run depin-demo",
+    "market-demo": "pnpm --filter @vrwx/sim run market-demo",
+    "multi-demo": "pnpm --filter @vrwx/sim run multi-demo",
+    "attack": "pnpm --filter @vrwx/sim run attack",
+    "smoke:localhost": "pnpm --filter @vrwx/sim run smoke:localhost",
+    "smoke:base-sepolia": "pnpm --filter @vrwx/sim run smoke:base-sepolia",
+    "deploy:localhost": "cd contracts && forge script script/DeployFull.s.sol --broadcast --rpc-url http://localhost:8545",
+    "deploy:base-sepolia": "cd contracts && forge script script/DeployFull.s.sol --broadcast --rpc-url base_sepolia --verify",
+    "openrmf-demo": "cd adapters/openrmf && python demo.py",
+    "openrmf-real-demo": "cd adapters/openrmf && python -m vrwx_rmf_adapter.rmf_live",
+    "dev:api": "pnpm --filter @vrwx/api run dev",
+    "wedge:localhost": "tsx scripts/wedge_multisvc.ts --network=localhost",
+    "wedge:base-sepolia": "tsx scripts/wedge_multisvc.ts --network=base-sepolia",
+    "dlq:replay": "tsx scripts/replay_dlq.ts",
+    "dlq:replay:dry": "tsx scripts/replay_dlq.ts --dry-run",
+    "conformance:run": "tsx packages/conformance/src/index.ts",
+    "conformance:all": "tsx packages/conformance/src/index.ts --service=all --dry-run"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@vrwx/sdk": "workspace:*",
+    "ethers": "^6.9.0"
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vrwx.io/schemas/JobSpec.json",
+  "title": "JobSpec",
+  "description": "Specification for a VRWX robotic work job",
+  "type": "object",
+  "required": ["serviceType", "geoCell", "timeWindow", "qualityMin", "deliverableManifestHash"],
+  "additionalProperties": false,
+  "properties": {
+    "serviceType": {
+      "type": "string",
+      "enum": ["inspection", "security_patrol", "delivery"],
+      "description": "Type of service (inspection, security_patrol, delivery)"
+    },
+    "serviceParams": {
+      "type": "object",
+      "description": "Service-specific parameters validated by the corresponding service module",
+      "additionalProperties": true
+    },
+    "geoCell": {
+      "type": "string",
+      "description": "Geographic cell identifier for the work location"
+    },
+    "timeWindow": {
+      "type": "object",
+      "required": ["start", "end"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unix timestamp for window start"
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unix timestamp for window end"
+        }
+      }
+    },
+    "qualityMin": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Minimum quality score required (0-100)"
+    },
+    "deliverableManifestHash": {
+      "type": "string",
+      "pattern": "^0x[a-fA-F0-9]{64}$",
+      "description": "Keccak256 hash of expected deliverables manifest"
+    }
+  }
+}

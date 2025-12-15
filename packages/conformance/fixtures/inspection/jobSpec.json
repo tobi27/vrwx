@@ -1,0 +1,24 @@
+{
+  "serviceType": "inspection",
+  "jobId": 1001,
+  "robotId": "robot-inspect-001",
+  "controller": "0x1234567890123456789012345678901234567890",
+  "eventBundle": [
+    { "type": "start", "timestamp": 1702500000 },
+    { "type": "waypoint", "x": 10, "y": 20, "timestamp": 1702500100 },
+    { "type": "waypoint", "x": 30, "y": 40, "timestamp": 1702500200 },
+    { "type": "scan", "zoneId": "zone-a", "timestamp": 1702500250 },
+    { "type": "waypoint", "x": 50, "y": 60, "timestamp": 1702500300 },
+    { "type": "complete", "timestamp": 1702500400 }
+  ],
+  "artifacts": [
+    { "type": "thermal_scan", "sha256": "abc123def456789...", "bytes": 2048 },
+    { "type": "photo", "sha256": "xyz987abc654321...", "bytes": 4096 }
+  ],
+  "inspection": {
+    "coverageVisited": 45,
+    "coverageTotal": 50
+  },
+  "startTs": 1702500000,
+  "endTs": 1702500400
+}

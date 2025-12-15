@@ -1,0 +1,19 @@
+{
+  "serviceType": "delivery",
+  "jobId": 3001,
+  "robotId": "robot-delivery-001",
+  "controller": "0x3456789012345678901234567890123456789012",
+  "eventBundle": [
+    { "type": "start", "timestamp": 1702520000 },
+    { "type": "pickup", "location": "warehouse-a", "timestamp": 1702520100 },
+    { "type": "transit", "timestamp": 1702520200 },
+    { "type": "dropoff", "location": "office-b", "timestamp": 1702520600 },
+    { "type": "complete", "timestamp": 1702520700 }
+  ],
+  "delivery": {
+    "pickupProofHash": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+    "dropoffProofHash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+  },
+  "startTs": 1702520000,
+  "endTs": 1702520700
+}

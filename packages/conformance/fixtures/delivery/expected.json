@@ -1,0 +1,8 @@
+{
+  "expectedHash": "0x...",
+  "expectedQuality": 100,
+  "expectedWorkUnits": 1,
+  "schemaVersion": "2025-12-15",
+  "manifestVersion": "2.0",
+  "_note": "Pickup proof (40) + Dropoff proof (40) + Route digest (10) + On-time (10) = 100. WorkUnits = 1 delivery"
+}

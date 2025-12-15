@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VRWX - Verified Robotic Work Exchange</title>
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --fg: #e5e5e5;
+      --accent: #3b82f6;
+      --success: #22c55e;
+      --border: #333;
+      --mono: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container { max-width: 500px; width: 100%; text-align: center; }
+    h1 { font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: 0.2em; }
+    .subtitle { color: #888; margin-bottom: 3rem; font-size: 0.875rem; }
+    .card {
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+    label { display: block; margin-bottom: 0.5rem; color: #888; font-size: 0.875rem; }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--fg);
+      font-family: var(--mono);
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 4px;
+      font-family: var(--mono);
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+    .result.success { border-color: var(--success); }
+    .result.error { border-color: #ef4444; }
+    .result a { color: var(--accent); }
+    .contracts {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    .contracts a { color: var(--accent); text-decoration: none; }
+    .contracts a:hover { text-decoration: underline; }
+    footer { margin-top: 2rem; color: #666; font-size: 0.75rem; }
+    footer a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>VRWX</h1>
+    <p class="subtitle">Verified Robotic Work Exchange</p>
+
+    <div class="card">
+      <form id="onboard-form">
+        <label for="name">Fleet Name</label>
+        <input type="text" id="name" name="name" placeholder="My Robot Fleet" required minlength="2">
+        <button type="submit" id="submit-btn">Connect Fleet</button>
+      </form>
+      <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="contracts">
+      <p>Base Mainnet (Chain ID: 8453)</p>
+      <p style="margin-top: 0.5rem;">
+        <a href="https://basescan.org/address/0x7B55CD2614d42E328622E13E2F04c6A4044dCf8B" target="_blank">JobEscrow</a> |
+        <a href="https://basescan.org/address/0x1f9Aa1738428a8b81798C79F571a61f0C2A8658b" target="_blank">IdentityRegistry</a> |
+        <a href="https://basescan.org/address/0xA0d9224a0528695383ECF8d1a7F62b5E32de79C4" target="_blank">BondManager</a>
+      </p>
+    </div>
+
+    <footer>
+      <a href="/health">API Health</a>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('onboard-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const btn = document.getElementById('submit-btn');
+      const result = document.getElementById('result');
+
+      btn.disabled = true;
+      btn.textContent = 'Connecting...';
+      result.style.display = 'none';
+
+      try {
+        const res = await fetch('/v1/onboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          // Auto-redirect to connect page
+          btn.textContent = 'Redirecting...';
+          window.location.href = data.connectUrl;
+        } else {
+          result.className = 'result error';
+          result.textContent = 'Error: ' + (data.error || 'Unknown error');
+          result.style.display = 'block';
+        }
+      } catch (err) {
+        result.className = 'result error';
+        result.textContent = 'Error: ' + err.message;
+        result.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Connect Fleet';
+    });
+  </script>
+</body>
+</html>

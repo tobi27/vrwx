@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://vrwx.io/schemas/ServiceRegistry.json",
+  "title": "ServiceRegistry",
+  "description": "Registry of available VRWX services and their requirements",
+  "type": "object",
+  "required": ["services"],
+  "additionalProperties": false,
+  "properties": {
+    "services": {
+      "type": "array",
+      "description": "List of registered services",
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "requiredCapabilities"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique service identifier (e.g., 'inspection', 'security_patrol', 'delivery')"
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable service name"
+          },
+          "description": {
+            "type": "string",
+            "description": "Detailed description of the service"
+          },
+          "requiredCapabilities": {
+            "type": "array",
+            "description": "Robot capabilities required for this service",
+            "items": {
+              "type": "string"
+            }
+          },
+          "specSchemaRef": {
+            "type": "string",
+            "description": "JSON Schema $ref for service-specific JobSpec parameters"
+          },
+          "manifestSchemaRef": {
+            "type": "string",
+            "description": "JSON Schema $ref for service-specific ExecutionManifest fields"
+          },
+          "baseRateUsd": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Base rate in USD per work unit for pricing"
+          }
+        }
+      }
+    }
+  }
+}

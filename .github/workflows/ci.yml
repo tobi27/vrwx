@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  contracts:
+    name: Contracts (Forge)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Build contracts
+        run: cd contracts && forge build --sizes
+
+      - name: Run tests
+        run: cd contracts && forge test -vvv
+
+      - name: Run invariant tests
+        run: cd contracts && forge test --match-contract Invariant -vvv
+
+      - name: Check gas snapshots
+        run: cd contracts && forge snapshot --check || true
+
+  typescript:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Typecheck
+        run: pnpm -r exec tsc --noEmit
+
+  demos:
+    name: Integration Demos
+    runs-on: ubuntu-latest
+    needs: [contracts, typescript]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Start Anvil
+        run: |
+          anvil --block-time 1 &
+          sleep 3
+
+      - name: Deploy contracts
+        run: pnpm deploy:localhost
+
+      - name: Run Demo
+        run: pnpm demo
+
+      - name: Run Market Demo
+        run: pnpm market-demo
+
+      - name: Run DePIN Demo
+        run: pnpm depin-demo
+
+      - name: Run Multi-Services Demo
+        run: pnpm multi-demo
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Solidity lint
+        run: cd contracts && forge fmt --check || true
+
+      - name: TypeScript lint
+        run: pnpm -r exec eslint . --ext .ts,.tsx || true

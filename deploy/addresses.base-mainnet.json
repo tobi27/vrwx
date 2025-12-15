@@ -1,0 +1,19 @@
+{
+  "_comment": "VRWX M4.1 deployment on Base Mainnet",
+  "_deployed": "2024-12-14",
+  "_deployer": "0x81a3D02D0E04ce529c8F5960d9a71c8f47fFb3df",
+  "_chainId": 8453,
+  "_network": "base-mainnet",
+  "stableToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "vrwxToken": "0x47f81Aa69BA606552201E5b4Ba9827d340fe23A4",
+  "identity": "0x1f9Aa1738428a8b81798C79F571a61f0C2A8658b",
+  "bond": "0xA0d9224a0528695383ECF8d1a7F62b5E32de79C4",
+  "receipt": "0xe7980B02E665AaB62fA5e5Bc10D35c7823ee1B04",
+  "escrow": "0x7B55CD2614d42E328622E13E2F04c6A4044dCf8B",
+  "dispute": "0x0E1850DEe87Cb9D870DB388292044EFA120A6d5E",
+  "rewardsDistributor": "0xe785570963a9218bb51A2Cd5c23369Fc7e19FB78",
+  "reputationLedger": "0xfF69b1389CcA9caCA301f0a6b63cAcbc62419F85",
+  "feeRouter": "0xf55c9F57487039112eAEeDbaeB45eeA8E3d536fe",
+  "stakingGate": "0x923A967Ae7e7bB1bBb90a87ef9877b645CC16437",
+  "offerBook": "0x3523C4E90CD3f5B58Fb016D003145E178560376b"
+}
