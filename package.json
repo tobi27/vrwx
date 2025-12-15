@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "pnpm --filter @vrwx/api run start",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "demo": "pnpm --filter @vrwx/sim run demo",
