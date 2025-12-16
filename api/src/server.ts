@@ -45,10 +45,12 @@ const app = Fastify({
   },
 });
 
-// CORS
+// CORS - allow all origins for API access
 app.register(cors, {
   origin: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Idempotency-Key'],
+  credentials: true,
 });
 
 // Static files for landing page
