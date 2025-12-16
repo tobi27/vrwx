@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/db/migrations dist/db/ && cp -r public dist/",
     "test": "vitest run",
     "test:watch": "vitest"
   },
