@@ -19,8 +19,8 @@ export const config = {
     process.env.VRWX_ACCEPT_SCHEMA_VERSIONS || '2025-12-15,2025-12-01'
   ).split(','),
 
-  // Database
-  DATABASE_PATH: process.env.DATABASE_PATH || './data/vrwx.db',
+  // Database (use /tmp on Railway if no volume mounted, or in-memory for testing)
+  DATABASE_PATH: process.env.DATABASE_PATH || (process.env.RAILWAY_ENVIRONMENT ? '/tmp/vrwx.db' : './data/vrwx.db'),
 
   // Chain configuration
   DEFAULT_CHAIN_ID: parseInt(process.env.DEFAULT_CHAIN_ID || '8453'), // Base Mainnet
