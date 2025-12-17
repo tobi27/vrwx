@@ -1,10 +1,39 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2 } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2, Zap, Camera, Truck, DollarSign } from 'lucide-react';
 import { api } from '../lib/api';
 import { Metrics, Receipt } from '../types';
 import { useLanguage, translateServiceType } from '../lib/i18n';
+
+// Pricing card component
+const PricingCard = ({ icon: Icon, title, price, unit, desc, delay }: { icon: any, title: string, price: number, unit: string, desc: string, delay: string }) => (
+  <div className={`p-6 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300 group text-center animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards ${delay}`}>
+    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-white/10 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
+      <Icon className="text-primary" size={28} />
+    </div>
+    <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
+    <div className="text-3xl font-mono font-bold text-white mb-1">
+      ${price}<span className="text-sm text-slate-400">{unit}</span>
+    </div>
+    <p className="text-slate-500 text-xs mb-4">{desc}</p>
+    <Link to="/quote" className="inline-flex items-center gap-1 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-all">
+      Get Quote <ArrowRight size={14} />
+    </Link>
+  </div>
+);
+
+// How it works step component
+const HowItWorksStep = ({ num, title, subtitle, desc }: { num: string, title: string, subtitle: string, desc: string }) => (
+  <div className="text-center group">
+    <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center mx-auto mb-3 text-primary font-mono font-bold text-lg group-hover:bg-primary group-hover:text-white transition-all">
+      {num}
+    </div>
+    <h3 className="font-bold text-white mb-1">{title}</h3>
+    <p className="text-xs text-slate-500 mb-1">{subtitle}</p>
+    <p className="text-xs text-slate-400">{desc}</p>
+  </div>
+);
 
 const FeatureCard = ({ icon: Icon, title, desc, delay }: { icon: any, title: string, desc: string, delay: string }) => (
   <div className={`p-8 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-500 group backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards ${delay}`}>
@@ -119,6 +148,31 @@ export const Landing = () => {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-2xl font-bold text-white mb-2">{t.how_it_works.title}</h2>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <HowItWorksStep num="1" title={t.how_it_works.step_1_title} subtitle={t.how_it_works.step_1_subtitle} desc={t.how_it_works.step_1_desc} />
+          <HowItWorksStep num="2" title={t.how_it_works.step_2_title} subtitle={t.how_it_works.step_2_subtitle} desc={t.how_it_works.step_2_desc} />
+          <HowItWorksStep num="3" title={t.how_it_works.step_3_title} subtitle={t.how_it_works.step_3_subtitle} desc={t.how_it_works.step_3_desc} />
+          <HowItWorksStep num="4" title={t.how_it_works.step_4_title} subtitle={t.how_it_works.step_4_subtitle} desc={t.how_it_works.step_4_desc} />
+        </div>
+        {/* Connection lines between steps */}
+        <div className="hidden md:flex justify-center mt-4">
+          <div className="flex items-center gap-2 text-slate-600">
+            <div className="w-20 h-px bg-gradient-to-r from-primary/50 to-transparent"></div>
+            <Zap size={12} className="text-primary" />
+            <div className="w-20 h-px bg-primary/30"></div>
+            <Zap size={12} className="text-primary" />
+            <div className="w-20 h-px bg-primary/30"></div>
+            <Zap size={12} className="text-primary" />
+            <div className="w-20 h-px bg-gradient-to-l from-primary/50 to-transparent"></div>
+          </div>
+        </div>
+      </section>
+
       {/* Value Prop Grid */}
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -126,24 +180,73 @@ export const Landing = () => {
           <p className="text-slate-400">{t.features.subtitle}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FeatureCard 
-            icon={Shield} 
-            title={t.features.card_1_title} 
+          <FeatureCard
+            icon={Shield}
+            title={t.features.card_1_title}
             desc={t.features.card_1_desc}
             delay="delay-0"
           />
-          <FeatureCard 
-            icon={FileJson} 
-            title={t.features.card_2_title} 
+          <FeatureCard
+            icon={FileJson}
+            title={t.features.card_2_title}
             desc={t.features.card_2_desc}
              delay="delay-100"
           />
-          <FeatureCard 
-            icon={Layers} 
-            title={t.features.card_3_title} 
+          <FeatureCard
+            icon={Layers}
+            title={t.features.card_3_title}
             desc={t.features.card_3_desc}
              delay="delay-200"
           />
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-white mb-3">{t.pricing.title}</h2>
+          <p className="text-slate-400">{t.pricing.subtitle}</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <PricingCard
+            icon={Camera}
+            title={t.pricing.inspection}
+            price={100}
+            unit={t.pricing.per_unit}
+            desc={t.pricing.inspection_desc}
+            delay="delay-0"
+          />
+          <PricingCard
+            icon={Shield}
+            title={t.pricing.patrol}
+            price={150}
+            unit={t.pricing.per_unit}
+            desc={t.pricing.patrol_desc}
+            delay="delay-100"
+          />
+          <PricingCard
+            icon={Truck}
+            title={t.pricing.delivery}
+            price={200}
+            unit={t.pricing.per_unit}
+            desc={t.pricing.delivery_desc}
+            delay="delay-200"
+          />
+        </div>
+        {/* Fee info */}
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+          <div className="flex items-center gap-2">
+            <DollarSign size={14} className="text-emerald-500" />
+            <span>{t.pricing.platform_fee}: 2.5%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Shield size={14} className="text-blue-500" />
+            <span>{t.pricing.bond}: 10%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-yellow-500" />
+            <span>{t.pricing.payout}</span>
+          </div>
         </div>
       </section>
 

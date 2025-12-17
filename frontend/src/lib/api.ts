@@ -160,6 +160,29 @@ export const api = {
     return data;
   },
 
+  // REAL - Get pricing rates
+  getRates: async (): Promise<{
+    services: { [key: string]: { baseRate: number, unit: string } },
+    fees: { platformBps: number, minBondRatio: number }
+  }> => {
+    try {
+      return await fetchAPI('/v1/rates');
+    } catch {
+      // Fallback defaults matching contract constants
+      return {
+        services: {
+          inspection: { baseRate: 100, unit: 'scan' },
+          patrol: { baseRate: 150, unit: 'hour' },
+          delivery: { baseRate: 200, unit: 'package' }
+        },
+        fees: {
+          platformBps: 250, // 2.5%
+          minBondRatio: 0.10 // 10%
+        }
+      };
+    }
+  },
+
   // REAL - Webhook test
   sendWebhookTest: async (serviceType: string): Promise<{ status: string, txHash: string, manifestHash: string, tokenId: string }> => {
     try {
