@@ -534,6 +534,29 @@ export const onboardRoutes: FastifyPluginAsync = async (fastify) => {
       },
     };
   });
+
+  /**
+   * GET /v1/rates
+   *
+   * Public endpoint - returns service rates and platform fees
+   * Used by frontend for real-time pricing calculations
+   */
+  fastify.get('/rates', async () => {
+    return {
+      services: {
+        inspection: { baseRate: 100, unit: 'scan', label: 'Facility Inspection' },
+        security_patrol: { baseRate: 150, unit: 'patrol', label: 'Security Patrol' },
+        delivery: { baseRate: 200, unit: 'package', label: 'Autonomous Delivery' },
+      },
+      fees: {
+        platformBps: 250, // 2.5%
+        minBondRatio: 0.10, // 10%
+      },
+      currency: 'USD',
+      settlement: 'USDC on Base',
+      chainId: config.DEFAULT_CHAIN_ID,
+    };
+  });
 };
 
 // Export helpers for connect.ts
