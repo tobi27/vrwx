@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2, Zap, DollarSign } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2, Zap, DollarSign, TrendingUp, Scale, Globe } from 'lucide-react';
 import { api } from '../lib/api';
 import { Metrics, Receipt } from '../types';
 import { useLanguage, translateServiceType } from '../lib/i18n';
@@ -45,6 +45,26 @@ const HowItWorksStep = ({ num, title, subtitle, desc }: { num: string, title: st
     <h3 className="font-bold text-white mb-1">{title}</h3>
     <p className="text-xs text-slate-500 mb-1">{subtitle}</p>
     <p className="text-xs text-slate-400">{desc}</p>
+  </div>
+);
+
+// Value Proposition Card with stat
+const ValuePropCard = ({ icon: Icon, title, desc, stat, statLabel, color }: {
+  icon: any, title: string, desc: string, stat: string, statLabel: string, color: string
+}) => (
+  <div className="relative p-8 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent hover:border-primary/30 transition-all duration-500 group overflow-hidden">
+    <div className={`absolute top-0 right-0 w-32 h-32 ${color} rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`}></div>
+    <div className="relative z-10">
+      <div className={`w-14 h-14 rounded-xl ${color.replace('bg-', 'bg-').replace('/20', '/10')} border border-white/10 flex items-center justify-center mb-6`}>
+        <Icon className="text-white" size={28} />
+      </div>
+      <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+      <p className="text-slate-400 text-sm leading-relaxed mb-6">{desc}</p>
+      <div className="pt-4 border-t border-white/10">
+        <div className="text-3xl font-mono font-bold text-white mb-1">{stat}</div>
+        <div className="text-xs text-slate-500 uppercase tracking-wider">{statLabel}</div>
+      </div>
+    </div>
   </div>
 );
 
@@ -158,6 +178,40 @@ export const Landing = () => {
            <StatBox label={t.hero.stat_active} value={metrics ? metrics.activeOffers : '---'} delay="delay-600" />
            <StatBox label={t.hero.stat_settled} value={metrics ? metrics.totalReceipts.toLocaleString() : '---'} delay="delay-700" />
            <StatBox label={t.hero.stat_security} value={metrics ? '99.9%' : '---'} sub={t.hero.stat_uptime} delay="delay-800" />
+        </div>
+      </section>
+
+      {/* Value Proposition - Why Tokenize? */}
+      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t.value_prop.title}</h2>
+          <p className="text-slate-400 max-w-2xl mx-auto">{t.value_prop.subtitle}</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ValuePropCard
+            icon={TrendingUp}
+            title={t.value_prop.card_1_title}
+            desc={t.value_prop.card_1_desc}
+            stat={t.value_prop.card_1_stat}
+            statLabel={t.value_prop.card_1_stat_label}
+            color="bg-emerald-500"
+          />
+          <ValuePropCard
+            icon={Scale}
+            title={t.value_prop.card_2_title}
+            desc={t.value_prop.card_2_desc}
+            stat={t.value_prop.card_2_stat}
+            statLabel={t.value_prop.card_2_stat_label}
+            color="bg-blue-500"
+          />
+          <ValuePropCard
+            icon={Globe}
+            title={t.value_prop.card_3_title}
+            desc={t.value_prop.card_3_desc}
+            stat={t.value_prop.card_3_stat}
+            statLabel={t.value_prop.card_3_stat_label}
+            color="bg-purple-500"
+          />
         </div>
       </section>
 
