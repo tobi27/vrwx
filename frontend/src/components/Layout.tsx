@@ -79,11 +79,8 @@ const Footer = () => {
   <footer className="border-t border-white/10 bg-black/40 backdrop-blur-lg pt-16 pb-24">
     <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-12">
       <div className="col-span-2 lg:col-span-2">
-        <Link to="/" className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 border border-white/10 bg-white/5 flex items-center justify-center">
-            <Box className="text-white w-4 h-4" />
-          </div>
-          <span className="font-bold font-mono tracking-tighter text-lg">VRWX<span className="text-primary">.OS</span></span>
+        <Link to="/" className="flex items-center mb-6">
+          <img src="/logo.png" alt="VRAIX" className="h-12 w-auto" />
         </Link>
         <p className="text-slate-400 text-sm max-w-sm mb-6 leading-relaxed">
           {t.hero.subtitle}
@@ -146,17 +143,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <header className="border-b border-white/5 sticky top-0 bg-background/80 backdrop-blur-md z-50">
         <div className="max-w-[1400px] mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-12">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="relative flex items-center justify-center w-10 h-10 border border-white/10 bg-white/5 group-hover:border-primary/50 group-hover:bg-primary/10 transition-all duration-500">
-                <Box className="text-white group-hover:text-primary transition-colors w-5 h-5" />
-                {/* Corner Accents */}
-                <div className="absolute top-0 left-0 w-1 h-1 bg-white group-hover:bg-primary transition-colors"></div>
-                <div className="absolute bottom-0 right-0 w-1 h-1 bg-white group-hover:bg-primary transition-colors"></div>
-              </div>
-              <div className="flex flex-col">
-                 <span className="font-bold font-mono tracking-tighter text-lg leading-none group-hover:text-primary transition-colors">VRWX<span className="text-primary">.OS</span></span>
-                 <span className="text-[9px] text-slate-500 uppercase tracking-widest leading-none mt-1 group-hover:text-primary/70">Protocol V2</span>
-              </div>
+            <Link to="/" className="flex items-center group">
+              <img
+                src="/logo.png"
+                alt="VRAIX"
+                className="h-10 w-auto group-hover:opacity-90 transition-opacity"
+              />
             </Link>
             
             <nav className="hidden md:flex items-center gap-1">
