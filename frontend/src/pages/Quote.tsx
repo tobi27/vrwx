@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Service } from '../types';
-import { Calculator, MapPin, Clock, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Terminal, Settings } from 'lucide-react';
+import { Calculator, MapPin, Clock, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Terminal, Info } from 'lucide-react';
 import { useLanguage, translateServiceType } from '../lib/i18n';
 
-// Pricing multipliers
-const QUALITY_MULTIPLIER = 0.05; // 5% per tier
-const RISK_PREMIUM = { low: 1.0, medium: 1.15, high: 1.4 };
+// Quality tier multipliers
+const QUALITY_MULT = { standard: 1.0, premium: 1.15, elite: 1.30 };
 
 export const Quote = () => {
-  const [step, setStep] = useState(1);
   const [services, setServices] = useState<Service[]>([]);
+  const [rates, setRates] = useState<{ platformBps: number; minBondRatio: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [offerCreated, setOfferCreated] = useState(false);
@@ -21,246 +20,279 @@ export const Quote = () => {
   const [formData, setFormData] = useState({
     serviceId: '',
     location: '',
-    durationHours: 2,
-    qualityTier: 'standard', // standard, premium, elite
-    riskLevel: 'low',
-    startDate: '',
+    units: 1,
+    qualityTier: 'standard' as 'standard' | 'premium' | 'elite',
   });
 
-  // Estimated Price State
-  const [estimate, setEstimate] = useState<{ base: number; total: number; bonding: number } | null>(null);
+  // Estimate state with full breakdown
+  const [estimate, setEstimate] = useState<{
+    baseRate: number;
+    units: number;
+    subtotal: number;
+    qualityAdj: number;
+    grossTotal: number;
+    platformFee: number;
+    netReceive: number;
+    bondRequired: number;
+  } | null>(null);
 
   useEffect(() => {
     api.getServices().then(setServices);
+    api.getRates().then(data => setRates(data.fees));
   }, []);
 
-  // Real-time price simulation
+  // Real-time price calculation
   useEffect(() => {
-    if (formData.serviceId) {
+    if (formData.serviceId && rates) {
       setCalculating(true);
       const timer = setTimeout(() => {
         const service = services.find(s => s.id === formData.serviceId);
-        const baseRate = service ? service.avgPrice : 50;
-        
-        const qMult = formData.qualityTier === 'premium' ? 1.5 : formData.qualityTier === 'elite' ? 2.5 : 1.0;
-        const rMult = RISK_PREMIUM[formData.riskLevel as keyof typeof RISK_PREMIUM];
-        
-        const hourlyTotal = baseRate * qMult * rMult;
-        const total = hourlyTotal * formData.durationHours;
-        
+        const baseRate = service?.avgPrice || 100;
+
+        const qMult = QUALITY_MULT[formData.qualityTier];
+        const subtotal = baseRate * formData.units;
+        const qualityAdj = subtotal * (qMult - 1);
+        const grossTotal = subtotal + qualityAdj;
+
+        // Platform fee: 2.5% (250 bps)
+        const platformFeeRate = rates.platformBps / 10000;
+        const platformFee = Math.max(grossTotal * platformFeeRate, 0.05); // min $0.05
+
+        const netReceive = grossTotal - platformFee;
+        const bondRequired = grossTotal * rates.minBondRatio;
+
         setEstimate({
-          base: baseRate,
-          total: Math.round(total),
-          bonding: Math.round(total * 0.1) // 10% bonding requirement
+          baseRate,
+          units: formData.units,
+          subtotal,
+          qualityAdj,
+          grossTotal,
+          platformFee,
+          netReceive,
+          bondRequired,
         });
         setCalculating(false);
-      }, 600);
+      }, 300);
       return () => clearTimeout(timer);
     }
-  }, [formData, services]);
+  }, [formData, services, rates]);
 
   const handleCreateOffer = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       setOfferCreated(true);
-      setStep(3);
     }, 2000);
   };
 
+  const formatUSD = (n: number) => `$${n.toFixed(2)}`;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <div className="w-12 h-12 bg-primary/10 border border-primary/30 rounded-lg flex items-center justify-center">
-            <Terminal className="text-primary" />
+          <Calculator className="text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold font-mono text-white tracking-tight glitch" data-text={t.quote.title}>{t.quote.title}</h1>
-          <p className="text-slate-400 font-mono text-xs uppercase tracking-widest">{t.quote.subtitle}</p>
+          <h1 className="text-3xl font-bold text-white">{t.quote.title}</h1>
+          <p className="text-slate-400 text-sm">{t.quote.subtitle}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        
-        {/* Left Column: Configurator */}
-        <div className="lg:col-span-7 space-y-8">
-          
-          <div className="space-y-8">
-            {/* Service Selection */}
-            <div className="bg-surface/50 border border-white/10 p-6 rounded-xl backdrop-blur-sm">
-              <label className="text-[10px] font-mono font-bold text-slate-500 uppercase mb-4 flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 bg-primary rounded-full"></div> {t.quote.step_1}
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {services.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setFormData({...formData, serviceId: s.id})}
-                    className={`relative p-4 rounded border text-left transition-all duration-300 group ${
-                      formData.serviceId === s.id 
-                      ? 'bg-primary/10 border-primary text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
-                      : 'bg-black/20 border-white/10 text-slate-400 hover:bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="font-mono text-sm font-bold mb-1 uppercase tracking-wide group-hover:text-primary transition-colors">{translateServiceType(s.name, lang)}</div>
-                    <div className="text-[10px] font-mono opacity-70">est. ${s.avgPrice}/hr</div>
-                    {formData.serviceId === s.id && <div className="absolute top-2 right-2 text-primary"><Check size={14} /></div>}
-                  </button>
-                ))}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-            {/* Parameters */}
-            <div className={`transition-all duration-500 ${formData.serviceId ? 'opacity-100 translate-y-0' : 'opacity-50 pointer-events-none translate-y-4'}`}>
-              <div className="bg-surface/50 border border-white/10 p-6 rounded-xl space-y-6 backdrop-blur-sm">
-                <label className="text-[10px] font-mono font-bold text-slate-500 uppercase flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 bg-primary rounded-full"></div> {t.quote.step_2}
-              </label>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs font-mono font-medium text-slate-300 mb-2 flex items-center gap-2">
-                       <MapPin size={12} /> {t.quote.label_zone}
-                    </label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-black/40 border border-white/10 rounded px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-primary transition-all placeholder:text-slate-700"
-                      placeholder="LAT/LNG or ZONE_ID"
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+        {/* Left Column: Configurator */}
+        <div className="lg:col-span-7 space-y-6">
+
+          {/* Service Selection */}
+          <div className="bg-surface border border-white/10 p-6 rounded-xl">
+            <label className="text-xs font-medium text-slate-400 uppercase mb-4 block">{t.quote.step_1}</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {services.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => setFormData({...formData, serviceId: s.id})}
+                  className={`relative p-4 rounded-lg border text-left transition-all ${
+                    formData.serviceId === s.id
+                    ? 'bg-primary/10 border-primary text-white'
+                    : 'bg-black/20 border-white/10 text-slate-400 hover:border-white/30'
+                  }`}
+                >
+                  <div className="font-bold text-sm mb-1">{translateServiceType(s.name, lang)}</div>
+                  <div className="text-xs text-slate-500 font-mono">${s.avgPrice}/unit</div>
+                  {formData.serviceId === s.id && (
+                    <div className="absolute top-2 right-2 text-primary"><Check size={14} /></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Parameters */}
+          <div className={`transition-all duration-300 ${formData.serviceId ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            <div className="bg-surface border border-white/10 p-6 rounded-xl space-y-6">
+              <label className="text-xs font-medium text-slate-400 uppercase block">{t.quote.step_2}</label>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-2 flex items-center gap-2">
+                    <MapPin size={12} /> {t.quote.label_zone}
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-primary transition-all"
+                    placeholder="e.g. Zone-1, Building A"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-2 flex items-center gap-2">
+                    <DollarSign size={12} /> Units
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="1" max="50" step="1"
+                      className="flex-1 h-2 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
+                      value={formData.units}
+                      onChange={(e) => setFormData({...formData, units: parseInt(e.target.value)})}
                     />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono font-medium text-slate-300 mb-2 flex items-center gap-2">
-                       <Clock size={12} /> {t.quote.label_duration}
-                    </label>
-                    <div className="flex items-center gap-4">
-                        <input 
-                          type="range" 
-                          min="1" max="24" step="1"
-                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full"
-                          value={formData.durationHours}
-                          onChange={(e) => setFormData({...formData, durationHours: parseInt(e.target.value)})}
-                        />
-                        <div className="text-right text-sm text-primary font-mono font-bold w-12">{formData.durationHours}h</div>
-                    </div>
+                    <div className="text-primary font-mono font-bold w-12 text-right">{formData.units}</div>
                   </div>
                 </div>
+              </div>
 
-                <div>
-                   <label className="block text-xs font-mono font-medium text-slate-300 mb-3 flex items-center gap-2">
-                       <ShieldCheck size={12} /> {t.quote.label_sla}
-                    </label>
-                   <div className="flex bg-black/40 p-1 rounded border border-white/10">
-                      {['standard', 'premium', 'elite'].map((tier) => (
-                        <button
-                          key={tier}
-                          onClick={() => setFormData({...formData, qualityTier: tier})}
-                          className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded transition-all ${
-                            formData.qualityTier === tier 
-                            ? 'bg-white/10 text-white shadow-sm border border-white/10' 
-                            : 'text-slate-600 hover:text-slate-400'
-                          }`}
-                        >
-                          {tier}
-                        </button>
-                      ))}
-                   </div>
+              <div>
+                <label className="block text-xs text-slate-400 mb-3 flex items-center gap-2">
+                  <ShieldCheck size={12} /> {t.quote.label_sla}
+                </label>
+                <div className="flex bg-black/40 p-1 rounded-lg border border-white/10">
+                  {(['standard', 'premium', 'elite'] as const).map((tier) => (
+                    <button
+                      key={tier}
+                      onClick={() => setFormData({...formData, qualityTier: tier})}
+                      className={`flex-1 py-2.5 text-xs font-medium uppercase rounded transition-all ${
+                        formData.qualityTier === tier
+                        ? 'bg-white/10 text-white'
+                        : 'text-slate-500 hover:text-slate-300'
+                      }`}
+                    >
+                      {tier} {tier !== 'standard' && <span className="text-emerald-500/70 ml-1">+{Math.round((QUALITY_MULT[tier] - 1) * 100)}%</span>}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Estimate & Action */}
+        {/* Right Column: Cost Breakdown */}
         <div className="lg:col-span-5">
-           <div className="sticky top-24">
-              <div className="bg-[#050810] border border-white/10 rounded-xl p-8 shadow-2xl relative overflow-hidden group">
-                {/* Background effect */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none group-hover:bg-primary/10 transition-colors duration-700"></div>
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+          <div className="sticky top-24">
+            <div className="bg-[#050810] border border-white/10 rounded-xl p-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
 
-                <div className="relative z-10">
-                  <h2 className="text-sm font-bold font-mono text-white mb-6 flex items-center gap-2 uppercase tracking-widest border-b border-white/10 pb-4">
-                    <Calculator size={14} className="text-primary" /> {t.quote.cost_title}
-                  </h2>
+              <h2 className="text-sm font-bold text-white mb-6 flex items-center gap-2 uppercase border-b border-white/10 pb-4">
+                <Calculator size={14} className="text-primary" /> {t.quote.cost_title}
+              </h2>
 
-                  {!formData.serviceId ? (
-                     <div className="text-center py-12 text-slate-600 font-mono text-xs border border-dashed border-white/10 rounded bg-white/[0.02]">
-                        {t.quote.wait_input}
-                     </div>
-                  ) : (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
-                      <div className="space-y-3 pb-6 border-b border-white/10 font-mono text-xs">
-                         <div className="flex justify-between text-slate-400">
-                           <span>{t.quote.base_rate} ({translateServiceType(services.find(s=>s.id === formData.serviceId)?.name || '', lang)})</span>
-                           <span>${estimate?.base}/hr</span>
-                         </div>
-                         <div className="flex justify-between text-slate-400">
-                           <span>{t.quote.label_duration}</span>
-                           <span>{formData.durationHours} HRS</span>
-                         </div>
-                         <div className="flex justify-between text-slate-400">
-                           <span>{t.quote.quality_mult}</span>
-                           <span className="text-emerald-500 capitalize">+{formData.qualityTier}</span>
-                         </div>
+              {!formData.serviceId ? (
+                <div className="text-center py-12 text-slate-600 text-sm border border-dashed border-white/10 rounded-lg">
+                  {t.quote.wait_input}
+                </div>
+              ) : calculating ? (
+                <div className="py-12 flex justify-center">
+                  <Loader2 className="animate-spin text-primary" size={24} />
+                </div>
+              ) : estimate && (
+                <div className="space-y-4 animate-in fade-in">
+                  {/* Breakdown */}
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between text-slate-400">
+                      <span>{t.quote.base_rate}</span>
+                      <span className="font-mono">{formatUSD(estimate.baseRate)} x {estimate.units}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Subtotal</span>
+                      <span className="font-mono">{formatUSD(estimate.subtotal)}</span>
+                    </div>
+                    {estimate.qualityAdj > 0 && (
+                      <div className="flex justify-between text-emerald-500/80">
+                        <span>Quality ({formData.qualityTier})</span>
+                        <span className="font-mono">+{formatUSD(estimate.qualityAdj)}</span>
                       </div>
+                    )}
+                    <div className="border-t border-white/10 pt-3 flex justify-between text-slate-300">
+                      <span>Gross Total</span>
+                      <span className="font-mono font-medium">{formatUSD(estimate.grossTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-red-400/70">
+                      <span className="flex items-center gap-1">
+                        Protocol Fee (2.5%)
+                        <Info size={10} className="text-slate-600" />
+                      </span>
+                      <span className="font-mono">-{formatUSD(estimate.platformFee)}</span>
+                    </div>
+                  </div>
 
-                      <div className="flex justify-between items-end">
-                         <span className="text-slate-300 font-mono text-xs uppercase">{t.quote.total_est}</span>
-                         <div className="text-right">
-                            {calculating ? (
-                               <div className="h-8 w-24 bg-white/10 animate-pulse rounded"></div>
-                            ) : (
-                               <div className="text-4xl font-bold font-mono text-white tracking-tighter">
-                                 ${estimate?.total}
-                               </div>
-                            )}
-                            <div className="text-[10px] font-mono text-slate-500 mt-1">USDC / VRWX</div>
-                         </div>
+                  {/* Net Total */}
+                  <div className="border-t border-white/10 pt-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-300 text-sm">You Receive</span>
+                      <span className="text-3xl font-bold font-mono text-white">
+                        {formatUSD(estimate.netReceive)}
+                      </span>
+                    </div>
+                    <div className="text-right text-xs text-slate-500 mt-1">USDC on Base</div>
+                  </div>
+
+                  {/* Bond Info */}
+                  <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-lg mt-4">
+                    <div className="flex items-start gap-3">
+                      <ShieldCheck size={16} className="text-primary mt-0.5" />
+                      <div>
+                        <div className="text-xs font-bold text-primary mb-1">{t.quote.bonding_title}</div>
+                        <p className="text-xs text-slate-400">
+                          {formatUSD(estimate.bondRequired)} (10%) - Refunded on completion
+                        </p>
                       </div>
+                    </div>
+                  </div>
 
-                      <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded flex gap-3">
-                         <div className="mt-0.5 text-primary"><ShieldCheck size={16} /></div>
-                         <div>
-                            <div className="text-[10px] font-bold font-mono text-primary mb-1 uppercase">{t.quote.bonding_title}</div>
-                            <p className="text-[10px] text-slate-400 leading-relaxed font-mono">
-                               {t.quote.bonding_desc.replace('${amount}', '$' + estimate?.bonding)}
-                            </p>
-                         </div>
-                      </div>
+                  {/* Action Button */}
+                  <button
+                    onClick={handleCreateOffer}
+                    disabled={loading || offerCreated}
+                    className={`w-full py-4 rounded-lg font-bold text-sm uppercase transition-all flex items-center justify-center gap-2 mt-4 ${
+                      offerCreated
+                      ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 cursor-default'
+                      : 'bg-primary hover:bg-blue-600 text-white'
+                    }`}
+                  >
+                    {loading ? (
+                      <Loader2 className="animate-spin" size={18} />
+                    ) : offerCreated ? (
+                      <><Check size={18} /> {t.quote.btn_done}</>
+                    ) : (
+                      <>{t.quote.btn_sign} <ArrowRight size={18} /></>
+                    )}
+                  </button>
 
-                      <button
-                         onClick={handleCreateOffer}
-                         disabled={loading || offerCreated}
-                         className={`w-full py-4 rounded font-bold font-mono text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 relative overflow-hidden ${
-                           offerCreated 
-                           ? 'bg-emerald-900/50 text-emerald-500 border border-emerald-500/50 cursor-default'
-                           : 'bg-white text-black hover:bg-slate-200'
-                         }`}
-                      >
-                         {loading ? (
-                           <Loader2 className="animate-spin" />
-                         ) : offerCreated ? (
-                           <> {t.quote.btn_done} <Check size={16} /></>
-                         ) : (
-                           <> {t.quote.btn_sign} <ArrowRight size={16} /></>
-                         )}
-                      </button>
-                      
-                      {offerCreated && (
-                        <div className="text-center animate-in fade-in zoom-in">
-                          <p className="text-[10px] font-mono text-slate-500 mb-2">{t.quote.offer_confirmed}</p>
-                          <a href="#" className="text-primary text-[10px] font-mono hover:underline">{t.quote.view_etherscan}</a>
-                        </div>
-                      )}
+                  {offerCreated && (
+                    <div className="text-center pt-2 animate-in fade-in">
+                      <p className="text-xs text-slate-500 mb-1">{t.quote.offer_confirmed}</p>
+                      <a href="https://basescan.org" target="_blank" rel="noopener noreferrer" className="text-primary text-xs hover:underline">
+                        {t.quote.view_etherscan}
+                      </a>
                     </div>
                   )}
                 </div>
-              </div>
-           </div>
+              )}
+            </div>
+          </div>
         </div>
-
       </div>
     </div>
   );

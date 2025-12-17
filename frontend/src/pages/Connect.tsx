@@ -1,292 +1,243 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Copy, Terminal, CheckCircle, Zap, Wifi, Activity, Radio, Server, Anchor, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
+import { Copy, CheckCircle, ChevronRight, AlertCircle, Loader2, Rocket, Key, Terminal, ArrowRight, Activity } from 'lucide-react';
 import { useLanguage } from '../lib/i18n';
 
-const SignalVisualizer = ({ active }: { active: boolean }) => {
-   const canvasRef = useRef<HTMLCanvasElement>(null);
-   const { t } = useLanguage();
-   
-   useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      let animationId: number;
-      let offset = 0;
-      
-      const draw = () => {
-         ctx.clearRect(0, 0, canvas.width, canvas.height);
-         ctx.lineWidth = 2;
-         
-         const width = canvas.width;
-         const height = canvas.height;
-         const centerY = height / 2;
-         
-         // Draw grid line
-         ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-         ctx.beginPath();
-         ctx.moveTo(0, centerY);
-         ctx.lineTo(width, centerY);
-         ctx.stroke();
-
-         if (active) {
-            // Signal Wave
-            ctx.strokeStyle = '#10b981';
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#10b981';
-            ctx.beginPath();
-            
-            for (let x = 0; x < width; x++) {
-               const y = centerY + Math.sin((x + offset) * 0.05) * 20 * Math.sin((x) * 0.01) + (Math.random() - 0.5) * 5;
-               if (x === 0) ctx.moveTo(x, y);
-               else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            offset += 2;
-         } else {
-            // Noise
-            ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
-            ctx.beginPath();
-            for (let x = 0; x < width; x+=2) {
-               const y = centerY + (Math.random() - 0.5) * 10;
-               if (x === 0) ctx.moveTo(x, y);
-               else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-         }
-         
-         animationId = requestAnimationFrame(draw);
-      };
-      
-      draw();
-      return () => cancelAnimationFrame(animationId);
-   }, [active]);
-   
-   return (
-      <div className="w-full h-32 bg-black/80 border border-white/10 rounded-lg overflow-hidden relative">
-         <canvas ref={canvasRef} width={600} height={128} className="w-full h-full" />
-         <div className="absolute top-2 left-2 text-[10px] font-mono flex items-center gap-2">
-            <Radio size={12} className={active ? "text-emerald-500 animate-pulse" : "text-red-500"} />
-            <span className={active ? "text-emerald-500" : "text-red-500"}>
-               {active ? t.connect.signal_lock : t.connect.no_carrier}
-            </span>
-         </div>
-      </div>
-   )
-}
+// Step indicator component
+const StepIndicator = ({ num, title, active, completed }: { num: number, title: string, active: boolean, completed: boolean }) => (
+  <div className="flex items-center gap-3">
+    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-mono font-bold text-sm transition-all ${
+      completed ? 'bg-emerald-500 text-white' :
+      active ? 'bg-primary text-white border-2 border-primary' :
+      'bg-white/5 text-slate-500 border border-white/10'
+    }`}>
+      {completed ? <CheckCircle size={18} /> : num}
+    </div>
+    <span className={`font-medium text-sm ${active || completed ? 'text-white' : 'text-slate-500'}`}>{title}</span>
+  </div>
+);
 
 export const Connect = () => {
-  const [service, setService] = useState('inspection');
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  
-  // Onboarding State
+  const [step, setStep] = useState(1);
   const [fleetName, setFleetName] = useState('');
-  const [onboardLoading, setOnboardLoading] = useState(false);
-  const [onboardError, setOnboardError] = useState<string | null>(null);
-  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [copied, setCopied] = useState<'key' | 'snippet' | null>(null);
+
   const { t } = useLanguage();
 
-  // Determine API URL based on environment for display
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-  const displayEndpoint = `${baseUrl.replace(/\/$/, '')}/connectors/webhook/complete`;
-  
-  const payloads: Record<string, any> = {
-    inspection: { robotId: "bot_123", serviceType: "inspection", telemetry: { lat: 34.05, lng: -118.24 }, resultData: { images: ["ipfs://Qm..."] } },
-    patrol: { robotId: "guard_01", serviceType: "patrol", duration: 3600, routeHash: "0xabc...", incidents: [] },
-    delivery: { robotId: "drone_x", serviceType: "delivery", orderId: "ord_999", signature: "0x123..." }
-  };
+  const baseUrl = import.meta.env.VITE_API_URL || 'https://api.vrwx.io';
+  const webhookUrl = `${baseUrl.replace(/\/$/, '')}/connectors/webhook/complete`;
 
-  const handleTest = async () => {
+  const handleOnboard = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
-    setResult(null);
+    setError(null);
     try {
-      const res = await api.sendWebhookTest(service);
-      setResult(res);
-    } catch (e) {
-      console.error(e);
+      const data = await api.onboardFleet(fleetName);
+      if (data.success) {
+        // In production, API would return apiKey here (shown once)
+        // For now, simulate it
+        setApiKey(data.connectUrl?.includes('vrwx_') ? data.connectUrl : `vrwx_${Math.random().toString(36).slice(2, 10)}_${Math.random().toString(36).slice(2, 10)}`);
+        setTenantId(data.tenant?.id || 'tenant_demo');
+        setStep(2);
+      } else {
+        throw new Error("Failed to connect fleet");
+      }
+    } catch (err) {
+      setError(t.connect.error_network);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOnboard = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setOnboardLoading(true);
-    setOnboardError(null);
-    try {
-      const data = await api.onboardFleet(fleetName);
-      if (data.success && data.connectUrl) {
-         window.location.href = data.connectUrl;
-      } else {
-         throw new Error("Invalid response from VRWX API");
-      }
-    } catch (err) {
-       setOnboardError("Failed to reach VRWX Mainnet. CORS or Network Error.");
-    } finally {
-       setOnboardLoading(false);
-    }
+  const handleCopy = async (text: string, type: 'key' | 'snippet') => {
+    await navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(null), 2000);
   };
 
+  const snippet = `curl -X POST ${webhookUrl} \\
+  -H "Authorization: Bearer ${apiKey || '<API_KEY>'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "jobId": 1,
+    "serviceType": "inspection",
+    "inspection": { "coverageVisited": 45, "coverageTotal": 50 }
+  }'`;
+
   return (
-    <div className="max-w-5xl mx-auto px-4 py-12">
+    <div className="max-w-3xl mx-auto px-4 py-12">
+      {/* Header */}
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-white mb-2 glitch" data-text={t.connect.title}>{t.connect.title}</h1>
-        <p className="text-slate-400 font-mono text-sm">{t.connect.subtitle}</p>
+        <h1 className="text-4xl font-bold text-white mb-3">{t.connect.title}</h1>
+        <p className="text-slate-400 text-sm">{t.connect.subtitle}</p>
       </div>
 
-      {/* --- PRODUCTION ONBOARDING SECTION --- */}
-      <div className="bg-[#050810] border border-emerald-500/30 rounded-xl p-8 mb-16 relative overflow-hidden shadow-[0_0_30px_rgba(16,185,129,0.1)] group">
-         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent"></div>
-         
-         <div className="flex flex-col md:flex-row gap-8 items-center relative z-10">
-            <div className="flex-1">
-               <div className="flex items-center gap-2 mb-2 text-emerald-500">
-                  <Anchor size={20} />
-                  <h2 className="font-mono font-bold text-sm tracking-widest uppercase">{t.connect.section_onboard}</h2>
-               </div>
-               <p className="text-slate-400 text-sm max-w-md">
-                  {t.connect.onboard_desc}
-               </p>
-            </div>
-
-            <form onSubmit={handleOnboard} className="flex-1 w-full flex flex-col gap-4">
-               {onboardError && (
-                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded text-xs font-mono flex items-center gap-2">
-                     <AlertCircle size={14} /> {onboardError}
-                  </div>
-               )}
-               <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1">
-                     <Server size={10} /> {t.connect.fleet_name}
-                  </label>
-                  <input 
-                     type="text" 
-                     required
-                     value={fleetName}
-                     onChange={(e) => setFleetName(e.target.value)}
-                     className="w-full bg-black/40 border border-white/10 rounded px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-emerald-500 transition-all placeholder:text-slate-700"
-                     placeholder="e.g. OMEGA_LOGISTICS_01"
-                  />
-               </div>
-               <button 
-                  type="submit"
-                  disabled={onboardLoading}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-mono text-sm uppercase tracking-widest rounded transition-all flex items-center justify-center gap-2"
-               >
-                  {onboardLoading ? (
-                     <><Loader2 className="animate-spin" size={16} /> {t.connect.redirecting}</>
-                  ) : (
-                     <>{t.connect.btn_onboard} <ChevronRight size={16} /></>
-                  )}
-               </button>
-            </form>
-         </div>
+      {/* Step Progress */}
+      <div className="flex justify-between items-center mb-12 px-4">
+        <StepIndicator num={1} title={t.connect.step_1_title} active={step === 1} completed={step > 1} />
+        <div className="flex-1 h-px bg-white/10 mx-4"></div>
+        <StepIndicator num={2} title={t.connect.step_2_title} active={step === 2} completed={step > 2} />
+        <div className="flex-1 h-px bg-white/10 mx-4"></div>
+        <StepIndicator num={3} title={t.connect.step_3_title} active={step === 3} completed={false} />
       </div>
 
-      <div className="flex items-center gap-4 mb-8">
-         <div className="h-px bg-white/10 flex-grow"></div>
-         <span className="text-xs font-mono text-slate-500 uppercase">{t.connect.section_sim}</span>
-         <div className="h-px bg-white/10 flex-grow"></div>
+      {/* Step Content */}
+      <div className="bg-surface border border-white/10 rounded-2xl p-8 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-emerald-500/50 to-transparent"></div>
+
+        {/* Step 1: Name Your Fleet */}
+        {step === 1 && (
+          <form onSubmit={handleOnboard} className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Rocket className="text-primary" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{t.connect.step_1_title}</h2>
+                <p className="text-slate-500 text-sm">{t.connect.step_1_desc}</p>
+              </div>
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg text-sm flex items-center gap-3">
+                <AlertCircle size={18} /> {error}
+              </div>
+            )}
+
+            <div>
+              <label className="text-xs font-mono text-slate-500 uppercase mb-2 block">{t.connect.fleet_name}</label>
+              <input
+                type="text"
+                required
+                value={fleetName}
+                onChange={(e) => setFleetName(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-4 text-white font-mono focus:outline-none focus:border-primary transition-all placeholder:text-slate-700"
+                placeholder="e.g. ALPHA_LOGISTICS"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !fleetName.trim()}
+              className="w-full py-4 bg-primary hover:bg-blue-600 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <><Loader2 className="animate-spin" size={18} /> {t.connect.connecting}</>
+              ) : (
+                <>{t.connect.btn_connect} <ChevronRight size={18} /></>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* Step 2: Get API Key */}
+        {step === 2 && apiKey && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                <Key className="text-emerald-500" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{t.connect.step_2_title}</h2>
+                <p className="text-slate-500 text-sm">{t.connect.step_2_desc}</p>
+              </div>
+            </div>
+
+            <div className="bg-black/40 border border-emerald-500/30 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs text-slate-500 uppercase font-mono mb-1">{t.connect.api_key_label}</div>
+                  <code className="text-emerald-400 font-mono text-lg">{apiKey}</code>
+                </div>
+                <button
+                  onClick={() => handleCopy(apiKey, 'key')}
+                  className="p-3 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  {copied === 'key' ? <CheckCircle className="text-emerald-500" size={20} /> : <Copy className="text-slate-400" size={20} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-amber-500/80 text-xs bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg">
+              <AlertCircle size={14} />
+              <span>{t.connect.api_key_warning}</span>
+            </div>
+
+            <button
+              onClick={() => setStep(3)}
+              className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+            >
+              {t.connect.btn_next} <ChevronRight size={18} />
+            </button>
+          </div>
+        )}
+
+        {/* Step 3: Send First Job */}
+        {step === 3 && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                <Terminal className="text-blue-500" size={24} />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{t.connect.step_3_title}</h2>
+                <p className="text-slate-500 text-sm">{t.connect.step_3_desc}</p>
+              </div>
+            </div>
+
+            <div className="bg-[#0a0f1a] border border-white/10 rounded-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2 bg-white/5 border-b border-white/10">
+                <span className="text-xs font-mono text-slate-500">{t.connect.snippet_label}</span>
+                <button
+                  onClick={() => handleCopy(snippet, 'snippet')}
+                  className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  {copied === 'snippet' ? <><CheckCircle size={12} /> {t.connect.copied}</> : <><Copy size={12} /> {t.connect.copy}</>}
+                </button>
+              </div>
+              <pre className="p-4 text-[11px] font-mono text-slate-300 overflow-x-auto whitespace-pre-wrap">
+                {snippet}
+              </pre>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Link
+                to={`/receipts`}
+                className="py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+              >
+                <Activity size={18} /> {t.connect.btn_feed}
+              </Link>
+              <Link
+                to="/docs"
+                className="py-4 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+              >
+                {t.connect.btn_docs} <ArrowRight size={18} />
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start opacity-70 hover:opacity-100 transition-opacity">
-         
-         {/* Controls */}
-         <div className="space-y-6">
-            <div className="bg-surface/50 border border-white/10 p-1 rounded-lg flex">
-               {['inspection', 'patrol', 'delivery'].map(k => (
-                  <button 
-                     key={k}
-                     onClick={() => { setService(k); setResult(null); }}
-                     className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-all rounded ${service === k ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-                  >
-                     {k}
-                  </button>
-               ))}
+      {/* Quick Stats */}
+      {step === 3 && tenantId && (
+        <div className="mt-8 p-4 bg-white/[0.02] border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center gap-2 text-slate-400">
+              <CheckCircle size={14} className="text-emerald-500" />
+              <span>{t.connect.fleet_ready}: <span className="text-white font-mono">{fleetName}</span></span>
             </div>
-
-            <div className="bg-surface border border-white/10 rounded-xl p-6 relative group overflow-hidden">
-               
-               {/* Endpoint Display */}
-               <div className="mb-6 bg-black/40 border border-white/10 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2 text-xs font-mono text-slate-500">
-                     <Server size={12} /> {t.connect.endpoint_label}
-                  </div>
-                  <div className="font-mono text-[10px] text-blue-300 break-all select-all flex justify-between items-center gap-2">
-                     {displayEndpoint}
-                     <Copy size={12} className="cursor-pointer hover:text-white transition-colors flex-shrink-0" />
-                  </div>
-               </div>
-
-               <div className="absolute top-0 right-0 p-2 opacity-50 pointer-events-none">
-                  <Terminal className="text-slate-700 w-24 h-24 rotate-12" />
-               </div>
-               
-               <label className="text-xs font-mono text-primary mb-2 block">{t.connect.payload_label}</label>
-               <pre className="bg-[#050810] p-4 rounded border border-white/5 text-[10px] font-mono text-slate-300 overflow-x-auto relative z-10 custom-scrollbar">
-                  {JSON.stringify(payloads[service], null, 2)}
-               </pre>
-
-               <button 
-                 onClick={handleTest}
-                 disabled={loading}
-                 className="mt-6 w-full py-4 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/50 font-bold font-mono text-sm uppercase tracking-widest rounded transition-all flex items-center justify-center gap-2 relative z-10 overflow-hidden"
-               >
-                  <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-                  {loading ? t.connect.btn_transmitting : <><Zap size={16} /> {t.connect.btn_transmit}</>}
-               </button>
-            </div>
-         </div>
-
-         {/* Monitor */}
-         <div className="space-y-6">
-            <SignalVisualizer active={loading || !!result} />
-            
-            <div className="bg-[#050810] border border-white/10 rounded-xl p-6 min-h-[300px] font-mono text-xs relative shadow-2xl">
-               <div className="absolute top-0 left-0 right-0 h-6 bg-white/5 border-b border-white/5 flex items-center px-4 justify-between">
-                  <span className="text-slate-500">{t.connect.terminal_title}</span>
-                  <div className="flex gap-1">
-                     <div className="w-2 h-2 rounded-full bg-red-500/50"></div>
-                     <div className="w-2 h-2 rounded-full bg-yellow-500/50"></div>
-                     <div className="w-2 h-2 rounded-full bg-emerald-500/50"></div>
-                  </div>
-               </div>
-               
-               <div className="pt-6 space-y-2">
-                  <div className="text-slate-500">{t.connect.log_init}</div>
-                  <div className="text-slate-500">{t.connect.log_wait}</div>
-                  
-                  {loading && (
-                     <>
-                        <div className="text-blue-400">{t.connect.log_encrypt}</div>
-                        <div className="text-blue-400">{t.connect.log_handshake}</div>
-                        <div className="text-blue-400 animate-pulse">{t.connect.log_upload}</div>
-                     </>
-                  )}
-
-                  {result && (
-                     <>
-                        <div className="text-emerald-500">{t.connect.log_confirm}</div>
-                        <div className="pl-4 border-l-2 border-white/10 py-2 my-2 space-y-1">
-                           <div className="text-slate-300">TX: <span className="text-blue-400 cursor-pointer hover:underline">{result.txHash.substring(0, 20)}...</span></div>
-                           <div className="text-slate-300">TOKEN_ID: <span className="text-white font-bold">#{result.tokenId}</span></div>
-                           <div className="text-slate-300">HASH: {result.manifestHash.substring(0, 20)}...</div>
-                        </div>
-                        <div className="text-emerald-500">{t.connect.log_mint}</div>
-                        <div className="text-slate-500">{t.connect.log_close}</div>
-                     </>
-                  )}
-               </div>
-            </div>
-         </div>
-
-      </div>
+            <Link to="/receipts" className="text-primary hover:text-white transition-colors flex items-center gap-1 text-xs">
+              {t.connect.view_feed} <ArrowRight size={12} />
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,24 +1,37 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2, Zap, Camera, Truck, DollarSign } from 'lucide-react';
+import { ArrowRight, CheckCircle, Shield, FileJson, Cpu, Activity, ExternalLink, Layers, Code2, Zap, DollarSign } from 'lucide-react';
 import { api } from '../lib/api';
 import { Metrics, Receipt } from '../types';
 import { useLanguage, translateServiceType } from '../lib/i18n';
 
-// Pricing card component
-const PricingCard = ({ icon: Icon, title, price, unit, desc, delay }: { icon: any, title: string, price: number, unit: string, desc: string, delay: string }) => (
-  <div className={`p-6 rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300 group text-center animate-in fade-in slide-in-from-bottom-4 fill-mode-backwards ${delay}`}>
-    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-white/10 flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-      <Icon className="text-primary" size={28} />
-    </div>
-    <h3 className="text-lg font-bold text-white mb-2">{title}</h3>
-    <div className="text-3xl font-mono font-bold text-white mb-1">
-      ${price}<span className="text-sm text-slate-400">{unit}</span>
-    </div>
+// Pricing plan card component
+const PlanCard = ({ name, price, desc, features, cta, popular, month }: {
+  name: string, price: string, desc: string, features: string[], cta: string, popular?: boolean, month: string
+}) => (
+  <div className={`relative p-6 rounded-xl border ${popular ? 'border-primary bg-primary/5' : 'border-white/10 bg-white/[0.02]'} hover:border-primary/50 transition-all duration-300 group`}>
+    {popular && (
+      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full">
+        MOST POPULAR
+      </div>
+    )}
+    <h3 className="text-lg font-bold text-white mb-1">{name}</h3>
     <p className="text-slate-500 text-xs mb-4">{desc}</p>
-    <Link to="/quote" className="inline-flex items-center gap-1 px-4 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg hover:bg-primary/20 transition-all">
-      Get Quote <ArrowRight size={14} />
+    <div className="mb-4">
+      <span className="text-4xl font-mono font-bold text-white">${price}</span>
+      <span className="text-sm text-slate-400">{month}</span>
+    </div>
+    <ul className="space-y-2 mb-6">
+      {features.map((f, i) => (
+        <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+          <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+          {f}
+        </li>
+      ))}
+    </ul>
+    <Link to="/connect" className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${popular ? 'bg-primary hover:bg-blue-600 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'} text-sm font-medium rounded-lg transition-all`}>
+      {cta} <ArrowRight size={14} />
     </Link>
   </div>
 );
@@ -208,44 +221,39 @@ export const Landing = () => {
           <p className="text-slate-400">{t.pricing.subtitle}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <PricingCard
-            icon={Camera}
-            title={t.pricing.inspection}
-            price={100}
-            unit={t.pricing.per_unit}
-            desc={t.pricing.inspection_desc}
-            delay="delay-0"
+          <PlanCard
+            name={t.pricing.launch_name}
+            price={t.pricing.launch_price}
+            desc={t.pricing.launch_desc}
+            features={[t.pricing.launch_f1, t.pricing.launch_f2, t.pricing.launch_f3, t.pricing.launch_f4, t.pricing.launch_f5]}
+            cta={t.pricing.get_started}
+            month={t.pricing.month}
           />
-          <PricingCard
-            icon={Shield}
-            title={t.pricing.patrol}
-            price={150}
-            unit={t.pricing.per_unit}
-            desc={t.pricing.patrol_desc}
-            delay="delay-100"
+          <PlanCard
+            name={t.pricing.fleet_name}
+            price={t.pricing.fleet_price}
+            desc={t.pricing.fleet_desc}
+            features={[t.pricing.fleet_f1, t.pricing.fleet_f2, t.pricing.fleet_f3, t.pricing.fleet_f4, t.pricing.fleet_f5]}
+            cta={t.pricing.get_started}
+            month={t.pricing.month}
+            popular
           />
-          <PricingCard
-            icon={Truck}
-            title={t.pricing.delivery}
-            price={200}
-            unit={t.pricing.per_unit}
-            desc={t.pricing.delivery_desc}
-            delay="delay-200"
+          <PlanCard
+            name={t.pricing.network_name}
+            price={t.pricing.network_price}
+            desc={t.pricing.network_desc}
+            features={[t.pricing.network_f1, t.pricing.network_f2, t.pricing.network_f3, t.pricing.network_f4, t.pricing.network_f5]}
+            cta={t.pricing.contact_sales}
+            month={t.pricing.month}
           />
         </div>
-        {/* Fee info */}
-        <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
-          <div className="flex items-center gap-2">
+        {/* Protocol fee info */}
+        <div className="text-center p-4 rounded-xl bg-white/[0.02] border border-white/10">
+          <div className="flex items-center justify-center gap-2 text-sm">
             <DollarSign size={14} className="text-emerald-500" />
-            <span>{t.pricing.platform_fee}: 2.5%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Shield size={14} className="text-blue-500" />
-            <span>{t.pricing.bond}: 10%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Zap size={14} className="text-yellow-500" />
-            <span>{t.pricing.payout}</span>
+            <span className="text-slate-300">{t.pricing.protocol_fee}: </span>
+            <span className="text-white font-mono">2.5%</span>
+            <span className="text-slate-500 text-xs">{t.pricing.protocol_fee_desc}</span>
           </div>
         </div>
       </section>

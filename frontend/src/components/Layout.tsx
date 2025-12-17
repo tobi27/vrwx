@@ -109,18 +109,19 @@ const Footer = () => {
         <h4 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-6">Developers</h4>
         <ul className="space-y-4 text-sm text-slate-400">
           <li><Link to="/docs" className="hover:text-primary transition-colors">{t.nav.docs}</Link></li>
-          <li><a href="#" className="hover:text-primary transition-colors">Github SDK</a></li>
-          <li><a href="#" className="hover:text-primary transition-colors">Smart Contracts</a></li>
+          <li><a href="https://github.com/vrwx" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Github SDK</a></li>
+          <li><a href="https://basescan.org/address/0x40Ba424ee54607cFb7A4fEe5DB46533Cc8c52fd3" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Smart Contracts</a></li>
           <li><Link to="/receipts" className="hover:text-primary transition-colors">{t.nav.ledger}</Link></li>
         </ul>
       </div>
 
       <div>
-        <h4 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-6">Legal</h4>
+        <h4 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-6">Resources</h4>
         <ul className="space-y-4 text-sm text-slate-400">
+          <li><a href="https://basescan.org" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-1">Block Explorer <span className="text-[10px] text-slate-600">↗</span></a></li>
+          <li><a href="https://l2beat.com/scaling/projects/base" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-1">Gas Tracker <span className="text-[10px] text-slate-600">↗</span></a></li>
+          <li><a href={`${import.meta.env.VITE_API_URL || 'https://api.vrwx.io'}/health`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-1">API Status <span className="text-[10px] text-slate-600">↗</span></a></li>
           <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
-          <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-          <li><a href="#" className="hover:text-primary transition-colors">Manifest Schema</a></li>
         </ul>
       </div>
     </div>
