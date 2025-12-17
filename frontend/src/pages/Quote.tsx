@@ -2,8 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Service } from '../types';
-import { Calculator, MapPin, Clock, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Terminal, Info } from 'lucide-react';
+import { Calculator, MapPin, Clock, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Terminal, Info, Wallet } from 'lucide-react';
 import { useLanguage, translateServiceType } from '../lib/i18n';
+import { useAccount, useWriteContract, useReadContract, USDC_ADDRESS, USDC_ABI, JOB_ESCROW_ADDRESS } from '../lib/wallet';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { parseUnits } from 'viem';
 
 // Quality tier multipliers
 const QUALITY_MULT = { standard: 1.0, premium: 1.15, elite: 1.30 };
@@ -15,6 +18,10 @@ export const Quote = () => {
   const [calculating, setCalculating] = useState(false);
   const [offerCreated, setOfferCreated] = useState(false);
   const { t, lang } = useLanguage();
+
+  // Wallet state
+  const { address, isConnected } = useAccount();
+  const { writeContract, isPending: isApproving } = useWriteContract();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -77,12 +84,30 @@ export const Quote = () => {
     }
   }, [formData, services, rates]);
 
-  const handleCreateOffer = () => {
+  const handleCreateOffer = async () => {
+    if (!isConnected || !estimate) return;
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      // Approve USDC spend (USDC has 6 decimals)
+      const amountInUSDC = parseUnits(estimate.grossTotal.toFixed(2), 6);
+
+      writeContract({
+        address: USDC_ADDRESS,
+        abi: USDC_ABI,
+        functionName: 'approve',
+        args: [JOB_ESCROW_ADDRESS, amountInUSDC],
+      });
+
+      // For demo, simulate success after approval
+      setTimeout(() => {
+        setLoading(false);
+        setOfferCreated(true);
+      }, 2000);
+    } catch (err) {
+      console.error('Transaction failed:', err);
       setLoading(false);
-      setOfferCreated(true);
-    }, 2000);
+    }
   };
 
   const formatUSD = (n: number) => `$${n.toFixed(2)}`;
@@ -262,23 +287,38 @@ export const Quote = () => {
                   </div>
 
                   {/* Action Button */}
-                  <button
-                    onClick={handleCreateOffer}
-                    disabled={loading || offerCreated}
-                    className={`w-full py-4 rounded-lg font-bold text-sm uppercase transition-all flex items-center justify-center gap-2 mt-4 ${
-                      offerCreated
-                      ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 cursor-default'
-                      : 'bg-primary hover:bg-blue-600 text-white'
-                    }`}
-                  >
-                    {loading ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : offerCreated ? (
-                      <><Check size={18} /> {t.quote.btn_done}</>
-                    ) : (
-                      <>{t.quote.btn_sign} <ArrowRight size={18} /></>
-                    )}
-                  </button>
+                  {!isConnected ? (
+                    <div className="mt-4">
+                      <ConnectButton.Custom>
+                        {({ openConnectModal }) => (
+                          <button
+                            onClick={openConnectModal}
+                            className="w-full py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
+                          >
+                            <Wallet size={18} /> Connect Wallet to Pay
+                          </button>
+                        )}
+                      </ConnectButton.Custom>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleCreateOffer}
+                      disabled={loading || offerCreated || isApproving}
+                      className={`w-full py-4 rounded-lg font-bold text-sm uppercase transition-all flex items-center justify-center gap-2 mt-4 ${
+                        offerCreated
+                        ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 cursor-default'
+                        : 'bg-primary hover:bg-blue-600 text-white'
+                      }`}
+                    >
+                      {loading || isApproving ? (
+                        <Loader2 className="animate-spin" size={18} />
+                      ) : offerCreated ? (
+                        <><Check size={18} /> {t.quote.btn_done}</>
+                      ) : (
+                        <>{t.quote.btn_sign} <ArrowRight size={18} /></>
+                      )}
+                    </button>
+                  )}
 
                   {offerCreated && (
                     <div className="text-center pt-2 animate-in fade-in">

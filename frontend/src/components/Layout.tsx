@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Box, Code2, Globe, ScrollText, Activity, Terminal, Cpu, Signal, Menu, X, Twitter, Github, Disc, Languages } from 'lucide-react';
+import { Box, Code2, Globe, ScrollText, Activity, Terminal, Cpu, Signal, Menu, X, Twitter, Github, Disc, Languages, Wallet } from 'lucide-react';
 import { CanvasNetwork } from './CanvasNetwork';
 import { api } from '../lib/api';
 import { useLanguage } from '../lib/i18n';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 
 
@@ -161,7 +162,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           
           <div className="flex items-center gap-4">
              {/* Language Switcher */}
-             <button 
+             <button
                 onClick={() => setLang(lang === 'en' ? 'zh' : 'en')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-bold font-mono border border-white/10 hover:border-primary/50 hover:bg-primary/10 text-slate-400 hover:text-white transition-all uppercase"
              >
@@ -169,13 +170,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 {lang === 'en' ? 'EN' : '中文'}
              </button>
 
-             <Link 
-                to="/connect"
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs font-mono text-primary font-bold transition-all hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] rounded"
-              >
-                <span className="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
-                {t.nav.uplink}
-              </Link>
+             {/* Wallet Connect */}
+             <div className="hidden sm:block">
+               <ConnectButton
+                 chainStatus="icon"
+                 accountStatus="address"
+                 showBalance={false}
+               />
+             </div>
              
              {/* Mobile Menu Button */}
              <button 
