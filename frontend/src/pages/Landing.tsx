@@ -7,13 +7,13 @@ import { Metrics, Receipt } from '../types';
 import { useLanguage, translateServiceType } from '../lib/i18n';
 
 // Pricing plan card component
-const PlanCard = ({ name, price, desc, features, cta, popular, month }: {
-  name: string, price: string, desc: string, features: string[], cta: string, popular?: boolean, month: string
+const PlanCard = ({ name, price, desc, features, cta, popular, popularLabel, month }: {
+  name: string, price: string, desc: string, features: string[], cta: string, popular?: boolean, popularLabel?: string, month: string
 }) => (
   <div className={`relative p-6 rounded-xl border ${popular ? 'border-primary bg-primary/5' : 'border-white/10 bg-white/[0.02]'} hover:border-primary/50 transition-all duration-300 group`}>
-    {popular && (
+    {popular && popularLabel && (
       <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full">
-        MOST POPULAR
+        {popularLabel}
       </div>
     )}
     <h3 className="text-lg font-bold text-white mb-1">{name}</h3>
@@ -55,8 +55,8 @@ const ValuePropCard = ({ icon: Icon, title, desc, stat, statLabel, color }: {
   <div className="relative p-8 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent hover:border-primary/30 transition-all duration-500 group overflow-hidden">
     <div className={`absolute top-0 right-0 w-32 h-32 ${color} rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity`}></div>
     <div className="relative z-10">
-      <div className={`w-14 h-14 rounded-xl ${color.replace('bg-', 'bg-').replace('/20', '/10')} border border-white/10 flex items-center justify-center mb-6`}>
-        <Icon className="text-white" size={28} />
+      <div className={`w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6`}>
+        <Icon className={`${color.replace('bg-', 'text-')}`} size={28} />
       </div>
       <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
       <p className="text-slate-400 text-sm leading-relaxed mb-6">{desc}</p>
@@ -109,7 +109,7 @@ const ProofRow: React.FC<{ receipt: Receipt }> = ({ receipt }) => {
     </div>
     
     <Link to={`/receipts/${receipt.tokenId}`} className="opacity-0 group-hover:opacity-100 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary border border-primary/20 rounded hover:bg-primary/20 transition-all">
-      Verify
+      {t.live.verify}
     </Link>
   </div>
 )};
@@ -291,6 +291,7 @@ export const Landing = () => {
             cta={t.pricing.get_started}
             month={t.pricing.month}
             popular
+            popularLabel={t.pricing.popular}
           />
           <PlanCard
             name={t.pricing.network_name}
@@ -336,7 +337,19 @@ export const Landing = () => {
           
           <div className="p-6 min-h-[300px] flex flex-col justify-end relative">
              <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-[#050b14] to-transparent z-10 pointer-events-none"></div>
-             {receipts.map((r, i) => <ProofRow key={r.tokenId} receipt={r} />)}
+             {receipts.length > 0 ? (
+               receipts.map((r) => <ProofRow key={r.tokenId} receipt={r} />)
+             ) : (
+               <div className="flex flex-col items-center justify-center py-12 text-center">
+                 <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                   <Activity size={20} className="text-slate-600" />
+                 </div>
+                 <p className="text-slate-500 text-sm">{t.live.empty}</p>
+                 <Link to="/connect" className="mt-4 text-primary text-xs hover:underline flex items-center gap-1">
+                   {t.hero.btn_connect} <ArrowRight size={12} />
+                 </Link>
+               </div>
+             )}
           </div>
         </div>
       </section>

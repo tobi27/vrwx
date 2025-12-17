@@ -75,6 +75,8 @@ export const translations = {
     live: {
       title: 'LIVE_SETTLEMENT_FEED.log',
       view_explorer: 'VIEW_EXPLORER',
+      verify: 'Verify',
+      empty: 'No settlements yet. Connect your fleet to start.',
     },
     cta: {
       title: 'Start buying outcomes.',
@@ -346,6 +348,8 @@ export const translations = {
     live: {
       title: '实时结算日志.log',
       view_explorer: '查看浏览器',
+      verify: '验证',
+      empty: '暂无结算记录。连接您的车队开始使用。',
     },
     cta: {
       title: '开始购买成果。',
