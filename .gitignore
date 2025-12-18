@@ -29,3 +29,7 @@ Thumbs.db
 *.log
 proof-lite.json
 proof-pack.json
+api/data/
+*.db
+*.db-shm
+*.db-wal
