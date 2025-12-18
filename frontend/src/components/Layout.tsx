@@ -120,7 +120,7 @@ const Footer = () => {
     <div className="max-w-[1400px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-12">
       <div className="col-span-2 lg:col-span-2">
         <Link to="/" className="flex items-center mb-6">
-          <img src="/logo.png" alt="VRAIX" className="h-12 w-auto" />
+          <img src="/logo.svg" alt="VRAIX" className="h-12 w-auto" />
         </Link>
         <p className="text-slate-400 text-sm max-w-sm mb-6 leading-relaxed">
           {t.hero.subtitle}
@@ -185,7 +185,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
           <div className="flex items-center gap-12">
             <Link to="/" className="flex items-center group">
               <img
-                src="/logo.png"
+                src="/logo.svg"
                 alt="VRAIX"
                 className="h-10 w-auto group-hover:opacity-90 transition-opacity"
               />
