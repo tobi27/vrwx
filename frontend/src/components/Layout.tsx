@@ -40,10 +40,10 @@ const AuthButton = () => {
   return (
     <button
       onClick={login}
-      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-all"
+      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-primary hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-all"
     >
       <User size={14} />
-      Sign In
+      <span className="hidden sm:inline">Sign In</span>
     </button>
   );
 };
