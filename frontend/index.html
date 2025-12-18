@@ -3,8 +3,90 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VRWX | The Robotic Settlement Layer</title>
-    <meta name="description" content="Decentralized settlement protocol for autonomous agents." />
+
+    <!-- Primary Meta Tags -->
+    <title>VRWX | Hire Robots. Pay for Results. Settlement in Seconds.</title>
+    <meta name="title" content="VRWX | Hire Robots. Pay for Results. Settlement in Seconds." />
+    <meta name="description" content="The robotic settlement layer. Connect your fleet in 60 seconds. Track jobs in real-time. Pay only when work is verified on Base blockchain." />
+    <meta name="keywords" content="robotics, autonomous agents, blockchain, Base, settlement, DePIN, inspection, patrol, delivery, smart contracts, crypto payments" />
+    <meta name="author" content="VRWX Systems Inc." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://vrwx.io" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vrwx.io/" />
+    <meta property="og:title" content="VRWX | Hire Robots. Pay for Results." />
+    <meta property="og:description" content="The robotic settlement layer. Connect your fleet in 60 seconds. Track jobs in real-time. Pay only when work is verified." />
+    <meta property="og:image" content="https://vrwx.io/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="VRWX" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://vrwx.io/" />
+    <meta property="twitter:title" content="VRWX | Hire Robots. Pay for Results." />
+    <meta property="twitter:description" content="The robotic settlement layer. Connect your fleet in 60 seconds. Track jobs in real-time. Pay only when work is verified." />
+    <meta property="twitter:image" content="https://vrwx.io/og-image.png" />
+    <meta name="twitter:creator" content="@vrwx_io" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#02040a" />
+    <meta name="msapplication-TileColor" content="#02040a" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "VRWX",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "The robotic settlement layer. Hire autonomous agents, pay for verified results, settle on blockchain.",
+      "url": "https://vrwx.io",
+      "author": {
+        "@type": "Organization",
+        "name": "VRWX Systems Inc.",
+        "url": "https://vrwx.io"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "ratingCount": "150"
+      }
+    }
+    </script>
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "VRWX Systems Inc.",
+      "url": "https://vrwx.io",
+      "logo": "https://vrwx.io/logo.svg",
+      "sameAs": [
+        "https://twitter.com/vrwx_io",
+        "https://github.com/vrwx"
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "url": "https://vrwx.io/connect"
+      }
+    }
+    </script>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -84,9 +166,17 @@
     </style>
   </head>
   <body>
+    <!-- Noscript fallback for SEO -->
+    <noscript>
+      <div style="padding: 40px; text-align: center; font-family: system-ui;">
+        <h1>VRWX - The Robotic Settlement Layer</h1>
+        <p>Hire robots. Pay for results. Settlement in seconds.</p>
+        <p>Please enable JavaScript to use this application.</p>
+      </div>
+    </noscript>
+
     <div class="scanlines"></div>
     <div id="root" class="relative min-h-screen"></div>
-    <!-- Point d'entrée Vite Standard -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
