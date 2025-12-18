@@ -61,7 +61,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 };
 
 // Export Privy hooks
-export { usePrivy, useWallets, useLogin, useLogout } from '@privy-io/react-auth';
+export { usePrivy, useWallets } from '@privy-io/react-auth';
 export { useAccount, useWriteContract, useReadContract } from 'wagmi';
 
 // USDC contract on Base
