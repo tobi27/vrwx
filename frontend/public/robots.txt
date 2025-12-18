@@ -1,11 +1,11 @@
-# VRWX Robots.txt
-# https://vrwx.io
+# VRAIX Robots.txt
+# https://www.vraix.app
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://vrwx.io/sitemap.xml
+Sitemap: https://www.vraix.app/sitemap.xml
 
 # Crawl-delay
 Crawl-delay: 1
