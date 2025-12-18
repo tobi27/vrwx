@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { Service } from '../types';
-import { Calculator, MapPin, Clock, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Terminal, Info, Wallet } from 'lucide-react';
+import { Calculator, MapPin, ShieldCheck, ArrowRight, Check, Loader2, DollarSign, Info, User, CreditCard } from 'lucide-react';
 import { useLanguage, translateServiceType } from '../lib/i18n';
-import { useAccount, useWriteContract, useReadContract, USDC_ADDRESS, USDC_ABI, JOB_ESCROW_ADDRESS } from '../lib/wallet';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { usePrivy, useAccount, useWriteContract, USDC_ADDRESS, USDC_ABI, JOB_ESCROW_ADDRESS } from '../lib/wallet';
 import { parseUnits } from 'viem';
 
 // Quality tier multipliers
@@ -15,11 +14,13 @@ export const Quote = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [rates, setRates] = useState<{ platformBps: number; minBondRatio: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cardLoading, setCardLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [offerCreated, setOfferCreated] = useState(false);
   const { t, lang } = useLanguage();
 
-  // Wallet state
+  // Wallet state (Privy + wagmi)
+  const { login, authenticated } = usePrivy();
   const { address, isConnected } = useAccount();
   const { writeContract, isPending: isApproving } = useWriteContract();
 
@@ -85,7 +86,7 @@ export const Quote = () => {
   }, [formData, services, rates]);
 
   const handleCreateOffer = async () => {
-    if (!isConnected || !estimate) return;
+    if (!authenticated || !isConnected || !estimate) return;
 
     setLoading(true);
     try {
@@ -107,6 +108,29 @@ export const Quote = () => {
     } catch (err) {
       console.error('Transaction failed:', err);
       setLoading(false);
+    }
+  };
+
+  const handlePayWithCard = async () => {
+    if (!estimate || !formData.serviceId) return;
+
+    setCardLoading(true);
+    try {
+      const service = services.find(s => s.id === formData.serviceId);
+      const result = await api.createCheckout({
+        serviceType: formData.serviceId,
+        units: formData.units,
+        qualityTier: formData.qualityTier,
+        location: formData.location || undefined,
+      });
+
+      // Redirect to Stripe Checkout
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      }
+    } catch (err) {
+      console.error('Checkout failed:', err);
+      setCardLoading(false);
     }
   };
 
@@ -286,39 +310,55 @@ export const Quote = () => {
                     </div>
                   </div>
 
-                  {/* Action Button */}
-                  {!isConnected ? (
-                    <div className="mt-4">
-                      <ConnectButton.Custom>
-                        {({ openConnectModal }) => (
-                          <button
-                            onClick={openConnectModal}
-                            className="w-full py-4 bg-primary hover:bg-blue-600 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
-                          >
-                            <Wallet size={18} /> Connect Wallet to Pay
-                          </button>
-                        )}
-                      </ConnectButton.Custom>
-                    </div>
-                  ) : (
+                  {/* Payment Options */}
+                  <div className="space-y-3 mt-4">
+                    {/* Pay with Card (Primary) */}
                     <button
-                      onClick={handleCreateOffer}
-                      disabled={loading || offerCreated || isApproving}
-                      className={`w-full py-4 rounded-lg font-bold text-sm uppercase transition-all flex items-center justify-center gap-2 mt-4 ${
-                        offerCreated
-                        ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 cursor-default'
-                        : 'bg-primary hover:bg-blue-600 text-white'
-                      }`}
+                      onClick={handlePayWithCard}
+                      disabled={cardLoading || offerCreated}
+                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-2"
                     >
-                      {loading || isApproving ? (
+                      {cardLoading ? (
                         <Loader2 className="animate-spin" size={18} />
-                      ) : offerCreated ? (
-                        <><Check size={18} /> {t.quote.btn_done}</>
                       ) : (
-                        <>{t.quote.btn_sign} <ArrowRight size={18} /></>
+                        <><CreditCard size={18} /> Pay with Card</>
                       )}
                     </button>
-                  )}
+
+                    <div className="flex items-center gap-3 text-slate-500 text-xs">
+                      <div className="flex-1 h-px bg-white/10"></div>
+                      <span>or</span>
+                      <div className="flex-1 h-px bg-white/10"></div>
+                    </div>
+
+                    {/* Pay with Crypto */}
+                    {!authenticated ? (
+                      <button
+                        onClick={login}
+                        className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-lg transition-all flex items-center justify-center gap-2"
+                      >
+                        <User size={16} /> Sign In for Crypto
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleCreateOffer}
+                        disabled={loading || offerCreated || isApproving}
+                        className={`w-full py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                          offerCreated
+                          ? 'bg-emerald-900/50 text-emerald-400 border border-emerald-500/30 cursor-default'
+                          : 'bg-white/5 hover:bg-white/10 border border-white/10 text-white'
+                        }`}
+                      >
+                        {loading || isApproving ? (
+                          <Loader2 className="animate-spin" size={16} />
+                        ) : offerCreated ? (
+                          <><Check size={16} /> {t.quote.btn_done}</>
+                        ) : (
+                          <>Pay with USDC <ArrowRight size={16} /></>
+                        )}
+                      </button>
+                    )}
+                  </div>
 
                   {offerCreated && (
                     <div className="text-center pt-2 animate-in fade-in">

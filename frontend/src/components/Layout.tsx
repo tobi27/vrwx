@@ -1,13 +1,52 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Box, Code2, Globe, ScrollText, Activity, Terminal, Cpu, Signal, Menu, X, Twitter, Github, Disc, Languages, Wallet } from 'lucide-react';
+import { Box, Code2, Globe, ScrollText, Activity, Terminal, Cpu, Signal, Menu, X, Twitter, Github, Disc, Languages, Wallet, LogOut, User } from 'lucide-react';
 import { CanvasNetwork } from './CanvasNetwork';
 import { api } from '../lib/api';
 import { useLanguage } from '../lib/i18n';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { usePrivy } from '@privy-io/react-auth';
 
 
+
+// Auth button component using Privy
+const AuthButton = () => {
+  const { login, logout, authenticated, user } = usePrivy();
+
+  if (authenticated && user) {
+    const displayName = user.email?.address?.split('@')[0] ||
+      user.google?.email?.split('@')[0] ||
+      user.twitter?.username ||
+      user.wallet?.address?.slice(0, 6) + '...' ||
+      'User';
+
+    return (
+      <div className="hidden sm:flex items-center gap-2">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-mono text-emerald-400">{displayName}</span>
+        </div>
+        <button
+          onClick={logout}
+          className="p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+          title="Sign out"
+        >
+          <LogOut size={16} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={login}
+      className="hidden sm:flex items-center gap-2 px-4 py-2 bg-primary hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-all"
+    >
+      <User size={14} />
+      Sign In
+    </button>
+  );
+};
 
 const NavLink: React.FC<{ to: string; icon: any; children: React.ReactNode; onClick?: () => void }> = ({ to, icon: Icon, children, onClick }) => {
   const location = useLocation();
@@ -170,14 +209,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 {lang === 'en' ? 'EN' : '中文'}
              </button>
 
-             {/* Wallet Connect */}
-             <div className="hidden sm:block">
-               <ConnectButton
-                 chainStatus="icon"
-                 accountStatus="address"
-                 showBalance={false}
-               />
-             </div>
+             {/* Auth Button */}
+             <AuthButton />
              
              {/* Mobile Menu Button */}
              <button 

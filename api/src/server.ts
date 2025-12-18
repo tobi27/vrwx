@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyStatic from '@fastify/static';
@@ -13,6 +14,7 @@ import { manifestsRoutes } from './routes/manifests.js';
 import { onboardRoutes } from './routes/onboard.js';
 import { connectRoutes } from './routes/connect.js';
 import { feedRoutes } from './routes/feed.js';
+import stripeRoutes from './routes/stripe.js';
 import { config, validateConfig } from './config.js';
 import { initDatabase, closeDatabase } from './db/index.js';
 import { IdempotencyConflictError } from './middleware/idempotency.js';
@@ -88,6 +90,7 @@ app.register(manifestsRoutes, { prefix: '/manifests' });
 app.register(onboardRoutes, { prefix: '/v1' });
 app.register(connectRoutes, { prefix: '/connect' });
 app.register(feedRoutes, { prefix: '/v1/feed' });
+app.register(stripeRoutes, { prefix: '/v1/payments' });
 
 // Error handler
 app.setErrorHandler((error, request, reply) => {

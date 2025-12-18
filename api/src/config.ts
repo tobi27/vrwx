@@ -103,6 +103,13 @@ export const config = {
   // Custodial mode settings
   CUSTODIAL_QUEUE_ENABLED: process.env.CUSTODIAL_QUEUE_ENABLED === '1',
   CUSTODIAL_DENY_ON_NO_TERMS: process.env.CUSTODIAL_DENY_ON_NO_TERMS === '1',
+
+  // =========================================
+  // Stripe (M4.7)
+  // =========================================
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:5173',
 } as const;
 
 // Validate critical config on startup
@@ -116,6 +123,16 @@ export function validateConfig(): void {
     if (!config.VRWX_STORAGE_REQUIRED) {
       console.warn(
         '[CONFIG] WARNING: VRWX_STORAGE_REQUIRED=0 in production is not recommended'
+      );
+    }
+    if (!config.STRIPE_SECRET_KEY) {
+      console.warn(
+        '[CONFIG] WARNING: STRIPE_SECRET_KEY not set - payment features will fail'
+      );
+    }
+    if (!config.STRIPE_WEBHOOK_SECRET) {
+      console.warn(
+        '[CONFIG] WARNING: STRIPE_WEBHOOK_SECRET not set - webhook signature verification disabled'
       );
     }
   }

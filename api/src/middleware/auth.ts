@@ -127,6 +127,8 @@ export async function apiKeyAuth(
     '/connect', // Connect page (token-based auth)
     '/v1/feed', // Live feed (public with tenant param)
     '/v1/robot-config', // Robot config download (public)
+    '/v1/payments', // Stripe payments (public checkout)
+    '/v1/rates', // Public rates endpoint
   ];
 
   const isPublic = publicPaths.some(p => request.url.startsWith(p));
@@ -136,6 +138,11 @@ export async function apiKeyAuth(
 
   // Allow POST /v1/onboard without auth (creates new tenant)
   if (request.url === '/v1/onboard' && request.method === 'POST') {
+    return;
+  }
+
+  // Allow POST to payments routes (Stripe checkout/webhook)
+  if (request.url.startsWith('/v1/payments') && request.method === 'POST') {
     return;
   }
 

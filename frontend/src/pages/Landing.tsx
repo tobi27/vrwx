@@ -7,34 +7,52 @@ import { Metrics, Receipt } from '../types';
 import { useLanguage, translateServiceType } from '../lib/i18n';
 
 // Pricing plan card component
-const PlanCard = ({ name, price, desc, features, cta, popular, popularLabel, month }: {
-  name: string, price: string, desc: string, features: string[], cta: string, popular?: boolean, popularLabel?: string, month: string
-}) => (
-  <div className={`relative p-6 rounded-xl border ${popular ? 'border-primary bg-primary/5' : 'border-white/10 bg-white/[0.02]'} hover:border-primary/50 transition-all duration-300 group`}>
-    {popular && popularLabel && (
-      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full">
-        {popularLabel}
+const PlanCard = ({ name, price, desc, features, cta, popular, popularLabel, month, planId, onSubscribe }: {
+  name: string, price: string, desc: string, features: string[], cta: string, popular?: boolean, popularLabel?: string, month: string, planId: string, onSubscribe: (plan: string) => void
+}) => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleClick = async () => {
+    if (planId === 'launch') {
+      // Free plan - go to connect
+      window.location.href = '/#/connect';
+      return;
+    }
+    setLoading(true);
+    onSubscribe(planId);
+  };
+
+  return (
+    <div className={`relative p-6 rounded-xl border ${popular ? 'border-primary bg-primary/5' : 'border-white/10 bg-white/[0.02]'} hover:border-primary/50 transition-all duration-300 group`}>
+      {popular && popularLabel && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full">
+          {popularLabel}
+        </div>
+      )}
+      <h3 className="text-lg font-bold text-white mb-1">{name}</h3>
+      <p className="text-slate-500 text-xs mb-4">{desc}</p>
+      <div className="mb-4">
+        <span className="text-4xl font-mono font-bold text-white">${price}</span>
+        <span className="text-sm text-slate-400">{month}</span>
       </div>
-    )}
-    <h3 className="text-lg font-bold text-white mb-1">{name}</h3>
-    <p className="text-slate-500 text-xs mb-4">{desc}</p>
-    <div className="mb-4">
-      <span className="text-4xl font-mono font-bold text-white">${price}</span>
-      <span className="text-sm text-slate-400">{month}</span>
+      <ul className="space-y-2 mb-6">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
+            <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
+            {f}
+          </li>
+        ))}
+      </ul>
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${popular ? 'bg-primary hover:bg-blue-600 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'} text-sm font-medium rounded-lg transition-all disabled:opacity-50`}
+      >
+        {loading ? 'Loading...' : cta} {!loading && <ArrowRight size={14} />}
+      </button>
     </div>
-    <ul className="space-y-2 mb-6">
-      {features.map((f, i) => (
-        <li key={i} className="flex items-center gap-2 text-sm text-slate-300">
-          <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
-          {f}
-        </li>
-      ))}
-    </ul>
-    <Link to="/connect" className={`w-full flex items-center justify-center gap-2 px-4 py-3 ${popular ? 'bg-primary hover:bg-blue-600 text-white' : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'} text-sm font-medium rounded-lg transition-all`}>
-      {cta} <ArrowRight size={14} />
-    </Link>
-  </div>
-);
+  );
+};
 
 // How it works step component
 const HowItWorksStep = ({ num, title, subtitle, desc }: { num: string, title: string, subtitle: string, desc: string }) => (
@@ -133,6 +151,20 @@ export const Landing = () => {
     api.getMetrics().then(setMetrics);
     api.getReceipts().then(data => setReceipts(data.slice(0, 3)));
   }, []);
+
+  const handleSubscribe = async (plan: string) => {
+    try {
+      const result = await api.subscribe(plan as 'launch' | 'fleet' | 'network');
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else if (result.connectUrl) {
+        window.location.href = `/#${result.connectUrl}`;
+      }
+    } catch (err) {
+      console.error('Subscription failed:', err);
+      alert('Failed to start subscription. Please try again.');
+    }
+  };
 
   return (
     <div className="space-y-32 pb-20 overflow-hidden">
@@ -276,14 +308,17 @@ export const Landing = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <PlanCard
+            planId="launch"
             name={t.pricing.launch_name}
             price={t.pricing.launch_price}
             desc={t.pricing.launch_desc}
             features={[t.pricing.launch_f1, t.pricing.launch_f2, t.pricing.launch_f3, t.pricing.launch_f4, t.pricing.launch_f5]}
             cta={t.pricing.get_started}
             month={t.pricing.month}
+            onSubscribe={handleSubscribe}
           />
           <PlanCard
+            planId="fleet"
             name={t.pricing.fleet_name}
             price={t.pricing.fleet_price}
             desc={t.pricing.fleet_desc}
@@ -292,14 +327,17 @@ export const Landing = () => {
             month={t.pricing.month}
             popular
             popularLabel={t.pricing.popular}
+            onSubscribe={handleSubscribe}
           />
           <PlanCard
+            planId="network"
             name={t.pricing.network_name}
             price={t.pricing.network_price}
             desc={t.pricing.network_desc}
             features={[t.pricing.network_f1, t.pricing.network_f2, t.pricing.network_f3, t.pricing.network_f4, t.pricing.network_f5]}
             cta={t.pricing.contact_sales}
             month={t.pricing.month}
+            onSubscribe={handleSubscribe}
           />
         </div>
         {/* Protocol fee info */}

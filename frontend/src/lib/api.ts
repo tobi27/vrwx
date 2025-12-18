@@ -183,6 +183,65 @@ export const api = {
     }
   },
 
+  // REAL - Create Stripe checkout session
+  createCheckout: async (params: {
+    serviceType: string;
+    units: number;
+    qualityTier: 'standard' | 'premium' | 'elite';
+    location?: string;
+    email?: string;
+  }): Promise<{ checkoutUrl: string; sessionId: string; paymentId: string }> => {
+    const res = await fetch(`${API_BASE}/v1/payments/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Checkout failed');
+    }
+    return res.json();
+  },
+
+  // REAL - Check payment status
+  getPaymentStatus: async (sessionId: string): Promise<{ status: string; amountTotal: number | null }> => {
+    return fetchAPI(`/v1/payments/session/${sessionId}`);
+  },
+
+  // REAL - Subscribe to a plan
+  subscribe: async (plan: 'launch' | 'fleet' | 'network', email?: string): Promise<{
+    checkoutUrl?: string;
+    sessionId?: string;
+    plan: string;
+    status?: string;
+    connectUrl?: string;
+  }> => {
+    const res = await fetch(`${API_BASE}/v1/payments/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, email })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Subscription failed');
+    }
+    return res.json();
+  },
+
+  // REAL - Get subscription plans
+  getPlans: async (): Promise<{
+    plans: Array<{
+      id: string;
+      name: string;
+      priceMonthly: number;
+      robots: number;
+      completionsPerMonth: number;
+      features: string[];
+    }>;
+  }> => {
+    return fetchAPI('/v1/payments/plans');
+  },
+
   // REAL - Webhook test
   sendWebhookTest: async (serviceType: string): Promise<{ status: string, txHash: string, manifestHash: string, tokenId: string }> => {
     try {

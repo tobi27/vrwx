@@ -1,43 +1,68 @@
-import '@rainbow-me/rainbowkit/styles.css';
-import { getDefaultConfig, RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit';
-import { WagmiProvider } from 'wagmi';
+import React from 'react';
+import { PrivyProvider } from '@privy-io/react-auth';
+import { WagmiProvider, createConfig, http } from 'wagmi';
 import { base } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 
-// Configure for Base Mainnet
-const config = getDefaultConfig({
-  appName: 'VRWX',
-  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'vrwx-demo', // Get from cloud.walletconnect.com
+// Wagmi config for Base Mainnet
+const wagmiConfig = createConfig({
   chains: [base],
-  ssr: false,
+  transports: {
+    [base.id]: http(),
+  },
 });
 
 const queryClient = new QueryClient();
 
-// Custom dark theme matching VRWX design
-const vrwxTheme = darkTheme({
-  accentColor: '#3b82f6', // primary blue
-  accentColorForeground: 'white',
-  borderRadius: 'medium',
-  fontStack: 'system',
-});
+// Privy App ID - get from dashboard.privy.io
+const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'clxxxxxxxxxxxxxxxxxx';
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <WagmiProvider config={config}>
+    <PrivyProvider
+      appId={PRIVY_APP_ID}
+      config={{
+        // Login methods - Email, Google, Twitter, Discord + Wallets
+        loginMethods: ['email', 'google', 'twitter', 'discord', 'wallet'],
+
+        // Appearance
+        appearance: {
+          theme: 'dark',
+          accentColor: '#3b82f6', // Primary blue
+          logo: '/logo.png',
+          showWalletLoginFirst: false, // Show social/email first
+        },
+
+        // Embedded wallets config
+        embeddedWallets: {
+          ethereum: {
+            createOnLogin: 'users-without-wallets', // Auto-create for non-crypto users
+          },
+        },
+
+        // Default chain
+        defaultChain: base,
+        supportedChains: [base],
+
+        // Legal
+        legal: {
+          termsAndConditionsUrl: 'https://vrwx.io/terms',
+          privacyPolicyUrl: 'https://vrwx.io/privacy',
+        },
+      }}
+    >
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={vrwxTheme} modalSize="compact">
+        <WagmiProvider config={wagmiConfig}>
           {children}
-        </RainbowKitProvider>
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 };
 
-// Export hooks for use in components
-export { useAccount, useConnect, useDisconnect, useBalance, useWriteContract, useReadContract } from 'wagmi';
-export { ConnectButton } from '@rainbow-me/rainbowkit';
+// Export Privy hooks
+export { usePrivy, useWallets, useLogin, useLogout } from '@privy-io/react-auth';
+export { useAccount, useWriteContract, useReadContract } from 'wagmi';
 
 // USDC contract on Base
 export const USDC_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
